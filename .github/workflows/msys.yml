@@ -3,8 +3,30 @@ name: MSYS
 on:
   # Allow this workflow to be called from another workflow
   workflow_call:
+    inputs:
+      repository:
+        description: 'Repository to checkout'
+        default: 'spk121/guile'
+        required: false
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        default: ''
+        required: false
+        type: string
   # Allow manual triggering
   workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to checkout'
+        default: 'spk121/guile'
+        required: false
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        default: ''
+        required: false
+        type: string
 
 jobs:
   build:
@@ -18,6 +40,8 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
         fetch-depth: 0
     - name: Install Msys2
       uses: msys2/setup-msys2@v2
