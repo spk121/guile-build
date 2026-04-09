@@ -1,0 +1,82 @@
+name: Ubuntu
+
+on:
+  # Allow this workflow to be called from another workflow
+  workflow_call:
+    inputs:
+      repository:
+        description: 'Repository to checkout'
+        default: 'spk121/guile'
+        required: false
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        default: ''
+        required: false
+        type: string
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to checkout'
+        default: 'spk121/guile'
+        required: false
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        default: ''
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        fetch-depth: 0
+    - name: Install packages
+      run: >-
+        sudo apt-get update &&
+        sudo apt-get install -y
+        texlive
+        texlive-plain-generic
+        texinfo
+        autoconf
+        libtool
+        gettext
+        autopoint
+        gperf
+        pkg-config
+        lzip
+        libgc-dev
+        libgmp-dev
+        libltdl-dev
+        libncurses5-dev
+        libreadline6-dev
+        libunistring-dev
+    - name: Configure
+      run: |
+        export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
+        mkdir `pwd`/app
+        ./autogen.sh
+        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+    - name: Build
+      run: |
+        make -j4 V=1
+    - name: Run Unit Tests
+      run: make check V=1
+    - name: Archive Test Logs
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: Test Logs
+        path: |
+          ./*.log
+          ./**/*.log
