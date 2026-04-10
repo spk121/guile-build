@@ -42,7 +42,10 @@ jobs:
           fetch-depth: 0
 
       - name: Install packages
-        run: brew install bdw-gc gmp libtool libunistring pkg-config readline gnu-sed automake autoconf
+        run: |
+          brew install bdw-gc gmp libunistring readline 
+          brew install gnu-sed pkg-config automake autoconf libtool
+          brew install texinfo
 
       - name: Configure
         run: |
