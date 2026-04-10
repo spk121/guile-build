@@ -70,18 +70,22 @@ jobs:
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
-        mkdir `pwd`/app
+        mkdir "$(pwd)/app"
         echo "3.0.99" > .tarball_version
-        sed -i s/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/ GUILE-VERSION
+        sed -i 's/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/' GUILE-VERSION
         sed -i 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
     - name: Build
-      run: make -j$(nproc) V=1
+      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
     - name: Check
-      run: make -j4 check V=1
+      run: make check V=1
     - name: Run Dist Check
-      run: make -j4 distcheck V=1
+      run: |
+        sed -i "s/^VERSION=.*/VERSION='3.0.99'/" configure
+        sed -i "s/^PACKAGE_VERSION=.*/PACKAGE_VERSION='3.0.99'/" configure
+        sed -i "s/^PACKAGE_STRING=.*/PACKAGE_STRING='GNU Guile 3.0.99'/" configure
+        make -j"$(nproc)" distcheck V=1
     - name: Unpack distribution tarball
       run: |
         mkdir dist-verify
@@ -95,19 +99,19 @@ jobs:
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
         cd dist-verify/guile-*/
         mkdir app
-        ./configure CFLAGS="-g -O2 -Wall" --prefix=`pwd`/app
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
     - name: Build distribution
       run: |
         cd dist-verify/guile-*/
-        make -j$(nproc) V=1
+        make -j"$(nproc)" V=1 2>&1 | tee dist-build.log
     - name: Check distribution
       run: |
         cd dist-verify/guile-*/
-        make -j4 check V=1
+        make check V=1
     - name: Dist Check distribution
       run: |
         cd dist-verify/guile-*/
-        make -j4 distcheck V=1
+        make -j"$(nproc)" distcheck V=1
     - name: Decompress gzip tarball
       # upload-artifact always zips its output, so decompress the .tar.gz
       # to avoid double-compression.
@@ -121,4 +125,5 @@ jobs:
           guile-*.tar.xz
           guile-*.tar.lz
           ./*.log
+          ./**/*.log
      

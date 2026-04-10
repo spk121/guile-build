@@ -77,16 +77,16 @@ jobs:
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
-        mkdir `pwd`/app
+        mkdir "$(pwd)/app"
         echo "3.0.99" > .tarball_version
-        sed -i s/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/ GUILE-VERSION
+        sed -i 's/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/' GUILE-VERSION
         sed -i 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix=`pwd`/app
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix="$(pwd)/app"
       shell: msys2 -o igncr '{0}'
     - name: Make
       run: |
-        make -j4 V=1
+        make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: msys2 -o igncr '{0}'
     - name: Run Unit Tests
       run: |
@@ -97,4 +97,6 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: Test logs ${{matrix.sys}}-${{matrix.env}}${{matrix.thread}}${{matrix.jit}}${{matrix.gmp}}
-        path: ./*.log
+        path: |
+          ./*.log
+          ./**/*.log
