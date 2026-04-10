@@ -1,87 +1,89 @@
 name: FreeBSD VM
 
 on:
-  # Allow this workflow to be called from another workflow
   workflow_call:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
+        description: "Repository to checkout"
+        default: "spk121/guile"
         required: false
         type: string
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: "Git ref to checkout"
+        default: ""
         required: false
         type: string
-  # Allow manual triggering
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
+        description: "Repository to checkout"
+        default: "spk121/guile"
         required: false
         type: string
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: "Git ref to checkout"
+        default: ""
         required: false
         type: string
 
 jobs:
   build:
     name: Build
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
     permissions:
       contents: read
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
-    - name: Build and Run
-      uses: vmactions/freebsd-vm@v1
-      with:
-        prepare: >-
-          pkg install -y
-          texlive-base
-          texinfo
-          autoconf
-          automake
-          m4
-          llvm
-          libtool
-          gettext
-          gperf
-          pkgconf
-          lzip
-          boehm-gc-threaded
-          gettext-runtime
-          gettext-tools
-          gmake
-          gmp
-          indexinfo
-          libffi
-          libiconv
-          libltdl
-          libtextstyle
-          libunistring
-          pkgconf
-        run: |
-          export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
-          mkdir `pwd`/app
-          echo "3.0.99" > .tarball_version
-          sed -i '' s/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/ GUILE-VERSION
-          sed -i '' 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
-          autoreconf -vif
-          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix=`pwd`/app --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded
-          gmake -j4 V=1
-          gmake check V=1
-    - name: Archive Test Logs
-      if: success() || failure()
-      uses: actions/upload-artifact@v6
-      with:
-        name: Test Logs
-        path: ./*.log
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Build and Run in FreeBSD VM
+        uses: vmactions/freebsd-vm@v1
+        with:
+          prepare: |
+            pkg install -y \
+              texlive-base \
+              texinfo \
+              autoconf \
+              automake \
+              m4 \
+              llvm \
+              libtool \
+              gettext \
+              gperf \
+              pkgconf \
+              lzip \
+              boehm-gc-threaded \
+              gettext-runtime \
+              gettext-tools \
+              gmake \
+              gmp \
+              indexinfo \
+              libffi \
+              libiconv \
+              libltdl \
+              libtextstyle \
+              libunistring
+          run: |
+            set -eux
+            export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
+            mkdir -p "$(pwd)/app"
+            echo "3.0.99" > .tarball_version
+            sed -i '' 's/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/' GUILE-VERSION
+            sed -i '' 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
+            autoreconf -vif
+            ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded
+            gmake -j"$(sysctl -n hw.ncpu)" V=1
+            gmake check V=1
+
+      - name: Archive Test Logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Test Logs
+          path: ./*.log
+          if-no-files-found: warn
