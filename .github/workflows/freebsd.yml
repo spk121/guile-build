@@ -41,7 +41,10 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      - name: Build and Run in FreeBSD VM
+      # Build and test in a single VM step to:
+      # 1. Avoid the overhead of launching multiple separate VM instances
+      # 2. Keep the build workspace and test logs available to the archive step
+      - name: Build and Test in FreeBSD VM
         uses: vmactions/freebsd-vm@v1
         with:
           prepare: |
@@ -85,5 +88,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: Test Logs
-          path: ./*.log
+          path: |
+            ./*.log
+            ./**/*.log
           if-no-files-found: warn
