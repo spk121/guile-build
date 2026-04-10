@@ -78,9 +78,9 @@ jobs:
             echo "3.0.99" > .tarball_version
             sed -i '' 's/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/' GUILE-VERSION
             sed -i '' 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
-            autoreconf -vif
+            ./autogen.sh
             ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded
-            gmake -j"$(sysctl -n hw.ncpu)" V=1
+            gmake -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
             gmake check V=1
 
       - name: Archive Test Logs
