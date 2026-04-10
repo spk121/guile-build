@@ -62,7 +62,7 @@ jobs:
           ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix="$(pwd)/app"
 
       - name: Build
-        run: make -j"$(sysctl -n hw.ncpu)" V=1
+        run: make -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
 
       - name: Run Unit Tests
         run: make check V=1
@@ -72,5 +72,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: Test Logs
-          path: ./*.log
+          path: |
+            ./*.log
+            ./**/*.log
           if-no-files-found: warn
