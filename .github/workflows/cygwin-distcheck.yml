@@ -78,6 +78,9 @@ jobs:
         sed -i "s/^VERSION=.*/VERSION='3.0.99'/" configure
         sed -i "s/^PACKAGE_VERSION=.*/PACKAGE_VERSION='3.0.99'/" configure
         sed -i "s/^PACKAGE_STRING=.*/PACKAGE_STRING='GNU Guile 3.0.99'/" configure
+        if [ -f GNUmakefile ]; then
+          sed -i 's/^[[:space:]]*_curr-ver := .*/    _curr-ver := $(VERSION)/' GNUmakefile
+        fi
         make -j"$(nproc)" distcheck V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Archive Source Package
