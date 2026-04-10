@@ -79,7 +79,22 @@ jobs:
         sed -i "s/^PACKAGE_VERSION=.*/PACKAGE_VERSION='3.0.99'/" configure
         sed -i "s/^PACKAGE_STRING=.*/PACKAGE_STRING='GNU Guile 3.0.99'/" configure
         if [ -f GNUmakefile ]; then
-          sed -i $'s/^[[:space:]]*_curr-ver := .*/\t_curr-ver := $(VERSION)/' GNUmakefile
+          awk '
+            !in_block && match($0, /^[[:space:]]*_curr-ver := \$\(shell cd \$\(srcdir\)[[:space:]]*\\[[:space:]]*$/) {
+              match($0, /^[[:space:]]*/)
+              indent = substr($0, RSTART, RLENGTH)
+              print indent "_curr-ver := $(VERSION)"
+              in_block = 1
+              next
+            }
+            in_block {
+              if ($0 ~ /^[[:space:]]*\$\(git-version-gen-tag-sed-script\)\)[[:space:]]*$/) {
+                in_block = 0
+              }
+              next
+            }
+            { print }
+          ' GNUmakefile > GNUmakefile.tmp && mv GNUmakefile.tmp GNUmakefile
         fi
         make -j"$(nproc)" distcheck V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
