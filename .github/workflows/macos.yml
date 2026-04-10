@@ -32,6 +32,7 @@ jobs:
   build:
     name: Build
     runs-on: macos-latest
+    timeout-minutes: 60
     permissions:
       contents: read
     steps:
@@ -47,6 +48,10 @@ jobs:
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        HOMEBREW_PREFIX=$(brew --prefix)
+        export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/gmp/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/bdw-gc/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libunistring/lib/pkgconfig:${PKG_CONFIG_PATH}"
+        export LDFLAGS="-L${HOMEBREW_PREFIX}/lib"
+        export CPPFLAGS="-I${HOMEBREW_PREFIX}/include"
         mkdir `pwd`/app
         echo "3.0.99" > .tarball_version
         sed -i '' s/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/ GUILE-VERSION
@@ -54,13 +59,12 @@ jobs:
         ./autogen.sh
         ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix=`pwd`/app
     - name: Build
-      run: |
-        make -j4 V=1
+      run: make -j$(sysctl -n hw.ncpu) V=1
     - name: Run Unit Tests
       run: make check V=1
     - name: Archive Test Logs
       if: success() || failure()
       uses: actions/upload-artifact@v6
-      with:
+     with:
         name: Test Logs
         path: ./*.log
