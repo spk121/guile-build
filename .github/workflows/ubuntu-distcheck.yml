@@ -81,7 +81,11 @@ jobs:
     - name: Check
       run: make check V=1
     - name: Run Dist Check
-      run: make -j$(nproc) distcheck V=1
+      run: |
+        sed -i s/^VERSION=.*/VERSION='3.0.99'/ configure
+        sed -i s/^PACKAGE_VERSION=.*/PACKAGE_VERSION='3.0.99'/ configure
+        sed -i s/^PACKAGE_STRING=.*/PACKAGE_STRING='GNU Guile 3.0.99'/ configure
+        make -j$(nproc) distcheck V=1
     - name: Decompress gzip tarball
       # upload-artifact always zips its output, so decompress the .tar.gz
       # to avoid double-compression.
