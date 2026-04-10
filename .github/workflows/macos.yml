@@ -49,8 +49,8 @@ jobs:
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir `pwd`/app
         echo "3.0.99" > .tarball_version
-        sed -i s/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/ GUILE-VERSION
-        sed -i 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
+        sed -i '' s/^GUILE_MICRO_VERSION=.*/GUILE_MICRO_VERSION=99/ GUILE-VERSION
+        sed -i '' 's|m4_esyscmd(\[build-aux/git-version-gen[^]]*\])|[3.0.99]|g' configure.ac
         ./autogen.sh
         ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix=`pwd`/app
     - name: Build
