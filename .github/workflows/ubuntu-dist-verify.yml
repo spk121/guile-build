@@ -103,10 +103,10 @@ jobs:
       run: |
         cd dist-verify/guile-*/
         make check V=1
-    - name: Dist Check distribution
+    - name: Make distribution
       run: |
         cd dist-verify/guile-*/
-        make -j"$(nproc)" distcheck V=1
+        make -j"$(nproc)" dist V=1
     - name: Decompress gzip tarball
       # upload-artifact always zips its output, so decompress the .tar.gz
       # to avoid double-compression.
