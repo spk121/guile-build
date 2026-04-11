@@ -86,7 +86,8 @@ jobs:
         sed -i "s/^PACKAGE_VERSION=.*/PACKAGE_VERSION='3.0.99'/" configure
         sed -i "s/^PACKAGE_STRING=.*/PACKAGE_STRING='GNU Guile 3.0.99'/" configure
         if [ -f GNUmakefile ]; then
-          sed -i "s/touch GNUmakefile/\# touch GNUmakefile/" GNUmakefile
+          # sed -i "s/touch GNUmakefile/\# touch GNUmakefile/" GNUmakefile
+          rm -f GNUmakefile
         fi
         make -j"$(nproc)" distcheck V=1
     - name: Decompress gzip tarball
