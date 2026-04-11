@@ -73,9 +73,6 @@ jobs:
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Run Dist Check
       run: |
-        if [ -f GNUmakefile ]; then
-          sed -i "s/touch GNUmakefile/\# touch GNUmakefile/" GNUmakefile
-        fi
         make -j"$(nproc)" distcheck V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
     - name: Archive Source Package

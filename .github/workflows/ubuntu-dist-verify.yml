@@ -80,9 +80,6 @@ jobs:
       run: make check V=1
     - name: Run Dist Check
       run: |
-        if [ -f GNUmakefile ]; then
-          sed -i $'s/^[[:space:]]*_curr-ver := .*/\t_curr-ver := $(VERSION)/' GNUmakefile
-        fi
         make -j"$(nproc)" distcheck V=1
     - name: Unpack distribution tarball
       run: |
