@@ -97,7 +97,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: Test Logs ${{matrix.sys}}-${{matrix.env}}${{matrix.thread}}${{matrix.jit}}${{matrix.gmp}}${{matrix.s64}}
+        name: mingw ${{matrix.sys}}-${{matrix.env}}${{matrix.thread}}${{matrix.jit}}${{matrix.gmp}}${{matrix.s64}}
         path: |
           ./*.log
           ./**/*.log

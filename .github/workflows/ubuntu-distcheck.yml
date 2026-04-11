@@ -91,7 +91,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: Source Package
+        name: pkg-ubuntu-distcheck
         path: |
           guile-*.tar
           ./*.log

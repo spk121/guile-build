@@ -101,7 +101,7 @@ jobs:
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: Test Logs
+        name: hurd
         path: |
           ./*.log
           ./**/*.log
