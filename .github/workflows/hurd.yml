@@ -71,9 +71,6 @@ jobs:
               flex \
               gperf \
               libreadline-dev \
-              # Bootstrapping: a working Guile is needed to regenerate certain build files
-              guile-3.0 \
-              # Miscellaneous utilities
               ca-certificates \
               curl
 
