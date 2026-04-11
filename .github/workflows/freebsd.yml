@@ -76,7 +76,6 @@ jobs:
           export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
           mkdir -p "$(pwd)/app"
           sed -i '' 's/^/;;/' test-suite/tests/version.test
-          sed -i '' 's|\${M4:-m4} --version|command -v "${M4:-m4}"|' autogen.sh
           ./autogen.sh
           ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded
           gmake -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log

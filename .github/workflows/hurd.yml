@@ -80,7 +80,6 @@ jobs:
           export LANG=C.UTF-8
           mkdir -p "$(pwd)/app"
           sed -i 's/^/;;/' test-suite/tests/version.test
-          sed -i 's|\${M4:-m4} --version|command -v "${M4:-m4}"|' autogen.sh
           ./autogen.sh
           ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app" --enable-mini-gmp
 
