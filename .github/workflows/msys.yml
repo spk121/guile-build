@@ -1,7 +1,6 @@
 name: MSYS
 
 on:
-  # Allow this workflow to be called from another workflow
   workflow_call:
     inputs:
       repository:
@@ -14,7 +13,6 @@ on:
         default: ''
         required: false
         type: string
-  # Allow manual triggering
   workflow_dispatch:
     inputs:
       repository:
@@ -38,13 +36,15 @@ jobs:
     steps:
     - name: Set git to Linux line endings
       run: git config --global core.autocrlf input
+
     - name: Checkout
       uses: actions/checkout@v6
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
         fetch-depth: 0
-    - name: Install Msys2
+
+    - name: Install MSYS2
       uses: msys2/setup-msys2@v2
       with:
         msystem: MSYS
@@ -65,6 +65,7 @@ jobs:
           libreadline-devel
           libunistring-devel
           texinfo
+
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
@@ -73,19 +74,20 @@ jobs:
         ./autogen.sh
         ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
       shell: msys2 -o igncr '{0}'
-    - name: Make
-      run: |
-        make -j"$(nproc)" V=1 2>&1 | tee build.log
+
+    - name: Build
+      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: msys2 -o igncr '{0}'
+
     - name: Run Unit Tests
-      run: |
-        make check V=1
+      run: make check V=1
       shell: msys2 -o igncr '{0}'
-    - name: Archive test logs
+
+    - name: Archive Test Logs
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: Test logs
+        name: Test Logs
         path: |
           ./*.log
           ./**/*.log

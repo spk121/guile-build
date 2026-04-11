@@ -1,7 +1,6 @@
 name: Cygwin Distcheck
 
 on:
-  # Allow this workflow to be called from another workflow
   workflow_call:
     inputs:
       repository:
@@ -14,7 +13,6 @@ on:
         default: ''
         required: false
         type: string
-  # Allow manual triggering
   workflow_dispatch:
     inputs:
       repository:
@@ -38,18 +36,21 @@ jobs:
     steps:
     - name: Set git to Linux line endings
       run: git config --global core.autocrlf input
+
     - name: Checkout
       uses: actions/checkout@v6
       with:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
         fetch-depth: 0
+
     - name: Cache Cygwin packages
       uses: actions/cache@v5
       with:
         path: C:\cygwin-packages
         key: cygwin-${{ runner.os }}-${{ hashFiles('.github/workflows/**') }}
-    - name: Install cygwin
+
+    - name: Install Cygwin
       uses: cygwin/cygwin-install-action@v4
       with:
         packages: >-
@@ -60,22 +61,26 @@ jobs:
           libgmp-devel libreadline-devel libunistring-devel
           libiconv-devel
           texinfo texinfo-tex texlive
+
     - name: Configure
       run: |
-          export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
-          mkdir "$(pwd)/app"
-          sed -i 's/^/;;/' test-suite/tests/version.test
-          ./autogen.sh
-          ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+        export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        mkdir "$(pwd)/app"
+        sed -i 's/^/;;/' test-suite/tests/version.test
+        ./autogen.sh
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
     - name: Build
       run: make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
     - name: Run Dist Check
-      run: |
-        make -j"$(nproc)" distcheck V=1
+      run: make -j"$(nproc)" distcheck V=1
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
     - name: Archive Source Package
+      if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
         name: Source Package

@@ -1,7 +1,6 @@
 name: Ubuntu
 
 on:
-  # Allow this workflow to be called from another workflow
   workflow_call:
     inputs:
       repository:
@@ -14,7 +13,6 @@ on:
         default: ''
         required: false
         type: string
-  # Allow manual triggering
   workflow_dispatch:
     inputs:
       repository:
@@ -42,11 +40,13 @@ jobs:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
         fetch-depth: 0
+
     - name: Cache apt packages
       uses: actions/cache@v5
       with:
         path: /var/cache/apt/archives
         key: apt-${{ runner.os }}-${{ hashFiles('.github/workflows/**') }}
+
     - name: Install packages
       run: >-
         sudo apt-get update &&
@@ -65,8 +65,9 @@ jobs:
         libgmp-dev
         libltdl-dev
         libncurses5-dev
-        libreadline6-dev
+        libreadline-dev
         libunistring-dev
+
     - name: Configure
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
@@ -74,11 +75,13 @@ jobs:
         sed -i 's/^/;;/' test-suite/tests/version.test
         ./autogen.sh
         ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+
     - name: Build
-      run: |
-        make -j"$(nproc)" V=1 2>&1 | tee build.log
+      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
+
     - name: Run Unit Tests
       run: make check V=1
+
     - name: Archive Test Logs
       if: success() || failure()
       uses: actions/upload-artifact@v6
