@@ -86,8 +86,8 @@ jobs:
         mkdir dist-verify
         cd dist-verify
         lzip -d -k ../guile-*.tar.lz
-        tar xf guile-*.tar
-        rm guile-*.tar
+        tar xf ../guile-*.tar
+        rm ../guile-*.tar
     - name: Configure distribution
       # No autogen.sh needed — a proper dist tarball ships a ready-made configure
       run: |
