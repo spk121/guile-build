@@ -1,4 +1,4 @@
-name: Debian GNU/Hurd VM
+name: Hurd VM
 
 on:
   workflow_call:
