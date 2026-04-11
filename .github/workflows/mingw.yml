@@ -81,7 +81,7 @@ jobs:
         mkdir "$(pwd)/app"
         sed -i 's/^/;;/' test-suite/tests/version.test
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} --prefix="$(pwd)/app"
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} ${{matrix.s64}} --prefix="$(pwd)/app"
       shell: msys2 -o igncr '{0}'
     - name: Make
       run: |
