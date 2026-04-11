@@ -50,7 +50,7 @@ jobs:
           sync: scp
           prepare: |
             apt-get update
-            apt-get install -y \
+            apt-get install -y --no-install-recommends \
               build-essential \
               texlive-base \
               texinfo \
@@ -67,7 +67,17 @@ jobs:
               libgmp-dev \
               libffi-dev \
               libltdl-dev \
-              libunistring-dev
+              libunistring-dev \
+              flex \
+              gperf \
+              libreadline-dev \
+              libunwind-dev \
+              # Bootstrapping: a working Guile is needed to regenerate certain build files
+              guile-3.0 \
+              # Miscellaneous utilities
+              ca-certificates \
+              curl
+
           run: |
             set -eux
             export LANG=C.UTF-8
