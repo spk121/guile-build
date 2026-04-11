@@ -72,7 +72,8 @@ jobs:
               gperf \
               libreadline-dev \
               ca-certificates \
-              curl
+              curl \
+              autopoint
 
           run: |
             set -eux
