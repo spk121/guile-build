@@ -1,0 +1,98 @@
+name: Run All Workflows
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to checkout'
+        default: 'spk121/guile'
+        required: false
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        default: ''
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      repository:
+        description: 'Repository to checkout'
+        default: 'spk121/guile'
+        required: false
+        type: string
+      ref:
+        description: 'Git ref to checkout'
+        default: ''
+        required: false
+        type: string
+
+jobs:
+  ubuntu:
+    name: Ubuntu
+    uses: ./.github/workflows/ubuntu.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  ubuntu_distcheck:
+    name: Ubuntu Distcheck
+    uses: ./.github/workflows/ubuntu-distcheck.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  ubuntu_dist_verify:
+    name: Ubuntu Dist Verify
+    uses: ./.github/workflows/ubuntu-dist-verify.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  macos:
+    name: MacOS
+    uses: ./.github/workflows/macos.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  freebsd:
+    name: FreeBSD VM
+    uses: ./.github/workflows/freebsd.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  hurd:
+    name: Debian GNU/Hurd VM
+    uses: ./.github/workflows/hurd.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  cygwin:
+    name: Cygwin
+    uses: ./.github/workflows/cygwin.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  cygwin_distcheck:
+    name: Cygwin Distcheck
+    uses: ./.github/workflows/cygwin-distcheck.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  msys:
+    name: MSYS
+    uses: ./.github/workflows/msys.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
+
+  mingw:
+    name: MinGW
+    uses: ./.github/workflows/mingw.yml
+    with:
+      repository: ${{ inputs.repository }}
+      ref: ${{ inputs.ref }}
