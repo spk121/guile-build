@@ -1,30 +1,9 @@
 name: Cygwin
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 08:00 UTC
   workflow_dispatch:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
 
 jobs:
   build:
@@ -37,12 +16,8 @@ jobs:
     - name: Set git to Linux line endings
       run: git config --global core.autocrlf input
 
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
+    - name: Clone Guile from Codeberg
+      run: git clone https://codeberg.org/guile/guile.git .
 
     - name: Cache Cygwin packages
       uses: actions/cache@v5
@@ -67,25 +42,40 @@ jobs:
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
         sed -i 's/^/;;/' test-suite/tests/version.test
-        ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+        ./autogen.sh 2>&1 | tee configure.log
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app" 2>&1 | tee -a configure.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
+    - name: Upload Configure Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: configure-log
+        path: configure.log
 
     - name: Build
       run: make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
 
-    - name: Run Unit Tests
-      run: |
-        git config --global --add safe.directory "$(pwd)"
-        make check V=1
-      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
-
-    - name: Archive Test Logs
+    - name: Upload Build Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: cygwin
+        name: build-log
+        path: build.log
+
+    - name: Run Unit Tests
+      run: |
+        git config --global --add safe.directory "$(pwd)"
+        make check V=1 2>&1 | tee check.log
+      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
+    - name: Upload Check Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: check-log
         path: |
-          ./*.log
-          ./**/*.log
+          check.log
+          ./**/test-suite.log
+  
