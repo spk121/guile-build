@@ -64,9 +64,10 @@ jobs:
       run: |
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
+        cd guile
         sed -i 's/^/;;/' test-suite/tests/version.test
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app" | tee -a configure.log
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" | tee -a configure.log
 
     - name: Upload Configure Log
       if: success() || failure()
@@ -74,8 +75,8 @@ jobs:
       with:
         name: configure-log
         path: |
-          configure.log
-          config.log
+          guile/configure.log
+          guile/config.log
         if-no-files-found: ignore
 
     - name: Build
@@ -86,11 +87,12 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: build-log
-        path: build.log
+        path: guile/build.log
         if-no-files-found: ignore
 
     - name: Run Unit Tests
       run: |
+        cd guile
         git config --global --add safe.directory "$(pwd)"
         make check V=1 2>&1 | tee check.log
       shell: bash
@@ -101,7 +103,7 @@ jobs:
       with:
         name: check-log
         path: |
-          check.log
-          ./test-suite/tests/*.log
-          ./test-suite/standalone/*.log
+          guile/check.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
         if-no-files-found: ignore
