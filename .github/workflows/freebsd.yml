@@ -1,29 +1,22 @@
 name: FreeBSD VM
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 15 * * *'  # Daily at 15:00 UTC
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
         required: false
+        default: ''
         type: string
 
 jobs:
@@ -34,19 +27,29 @@ jobs:
     permissions:
       contents: read
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
+    - name: Clone source repository
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$REPO_URL" --depth=1
+        if [ -n "$REPO_REF" ]; then
+          cd guile
+          git fetch --depth=1 origin "$REPO_REF"
+          git checkout "$REPO_REF"
+        fi
+      shell: bash
 
     # Build and test run in a single VM step to avoid the overhead of
-    # launching multiple VM instances and to keep logs accessible for
-    # the archive step.
+    # launching multiple VM instances. Each phase writes its own log
+    # so the artifact uploads afterward can pick them up individually.
+    # The vmactions/freebsd-vm action shares the workspace with the
+    # host, so logs written in the VM are visible on the runner.
     - name: Build and Test in FreeBSD VM
       uses: vmactions/freebsd-vm@v1
       with:
+        usesh: true
+        copyback: true
         prepare: |
           pkg install -y \
             texlive-base \
@@ -72,21 +75,63 @@ jobs:
             libtextstyle \
             libunistring
         run: |
-          set -eux
+          set -u
           export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
           mkdir -p "$(pwd)/app"
+          cd guile
           sed -i '' 's/^/;;/' test-suite/tests/version.test
-          ./autogen.sh
-          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded
-          gmake -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
-          gmake check V=1
 
-    - name: Archive Test Logs
+          # Configure phase
+          set -o pipefail
+          ./autogen.sh 2>&1 | tee configure.log
+          autogen_exit=$?
+          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/../app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded 2>&1 | tee -a configure.log
+          configure_exit=$?
+
+          # Build phase (only if configure succeeded)
+          build_exit=0
+          if [ $autogen_exit -eq 0 ] && [ $configure_exit -eq 0 ]; then
+            gmake -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
+            build_exit=$?
+          fi
+
+          # Check phase (only if build succeeded)
+          check_exit=0
+          if [ $build_exit -eq 0 ] && [ $autogen_exit -eq 0 ] && [ $configure_exit -eq 0 ]; then
+            gmake check V=1 2>&1 | tee check.log
+            check_exit=$?
+          fi
+
+          # Propagate any failure
+          if [ $autogen_exit -ne 0 ] || [ $configure_exit -ne 0 ] || [ $build_exit -ne 0 ] || [ $check_exit -ne 0 ]; then
+            exit 1
+          fi
+
+    - name: Upload Configure Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: freebsd
+        name: configure-log
         path: |
-          ./*.log
-          ./**/*.log
-        if-no-files-found: warn
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
+
+    - name: Upload Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log
+        path: guile/build.log
+        if-no-files-found: ignore
+
+    - name: Upload Check Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: check-log
+        path: |
+          guile/check.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
+        if-no-files-found: ignore

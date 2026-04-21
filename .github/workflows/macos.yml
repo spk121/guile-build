@@ -1,29 +1,22 @@
 name: MacOS
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 12 * * *'  # Daily at 12:00 UTC
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
         required: false
+        default: ''
         type: string
 
 jobs:
@@ -34,18 +27,17 @@ jobs:
     permissions:
       contents: read
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
-
-    - name: Cache Homebrew downloads
-      uses: actions/cache@v5
-      with:
-        path: ~/Library/Caches/Homebrew
-        key: homebrew-${{ runner.os }}-${{ hashFiles('.github/workflows/**') }}
+    - name: Clone source repository
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$REPO_URL" --depth=1
+        if [ -n "$REPO_REF" ]; then
+          git fetch --depth=1 origin "$REPO_REF"
+          git checkout "$REPO_REF"
+        fi
+      shell: bash
 
     - name: Install packages
       run: |
@@ -55,28 +47,58 @@ jobs:
 
     - name: Configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         HOMEBREW_PREFIX="$(brew --prefix)"
         export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/gmp/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/bdw-gc/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libunistring/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libiconv/lib/pkgconfig:${PKG_CONFIG_PATH}"
         export LDFLAGS="-L${HOMEBREW_PREFIX}/lib -L${HOMEBREW_PREFIX}/opt/libiconv/lib"
         export CPPFLAGS="-I${HOMEBREW_PREFIX}/include -I${HOMEBREW_PREFIX}/opt/libiconv/include"
         mkdir -p "$(pwd)/app"
+        cd guile
         sed -i '' 's/^/;;/' test-suite/tests/version.test
-        ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix="$(pwd)/app"
+        ./autogen.sh 2>&1 | tee configure.log
+        ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+      shell: bash
 
-    - name: Build
-      run: make -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
-
-    - name: Run Unit Tests
-      run: make check V=1
-
-    - name: Archive Test Logs
+    - name: Upload Configure Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: macos
+        name: configure-log
         path: |
-          ./*.log
-          ./**/*.log
-          if-no-files-found: warn
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
+
+    - name: Build
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
+      shell: bash
+
+    - name: Upload Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log
+        path: guile/build.log
+        if-no-files-found: ignore
+
+    - name: Run Unit Tests
+      run: |
+        set -o pipefail
+        cd guile
+        make check V=1 2>&1 | tee check.log
+      shell: bash
+
+    - name: Upload Check Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: check-log
+        path: |
+          guile/check.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
+        if-no-files-found: ignore

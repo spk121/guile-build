@@ -1,29 +1,22 @@
 name: MinGW
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 14 * * *'  # Daily at 14:00 UTC
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
         required: false
+        default: ''
         type: string
 
 jobs:
@@ -47,12 +40,18 @@ jobs:
     - name: Set git to Linux line endings
       run: git config --global core.autocrlf input
 
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
+    - name: Clone source repository
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$env:REPO_URL" --depth=1
+        if ($env:REPO_REF -ne '') {
+          cd guile
+          git fetch --depth=1 origin "$env:REPO_REF"
+          git checkout "$env:REPO_REF"
+        }
+      shell: pwsh
 
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
@@ -78,26 +77,54 @@ jobs:
 
     - name: Configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
+        cd guile
         sed -i 's/^/;;/' test-suite/tests/version.test
-        ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} ${{matrix.s64}} --prefix="$(pwd)/app"
+        ./autogen.sh 2>&1 | tee configure.log
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} ${{matrix.s64}} --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
       shell: msys2 -o igncr '{0}'
 
-    - name: Build
-      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
-      shell: msys2 -o igncr '{0}'
-
-    - name: Run Unit Tests
-      run: make check V=1
-      shell: msys2 -o igncr '{0}'
-
-    - name: Archive Test Logs
+    - name: Upload Configure Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: mingw ${{matrix.sys}}-${{matrix.env}}${{matrix.thread}}${{matrix.jit}}${{matrix.gmp}}${{matrix.s64}}
+        name: configure-log-${{matrix.sys}}-${{matrix.env}}
         path: |
-          ./*.log
-          ./**/*.log
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
+
+    - name: Build
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(nproc)" V=1 2>&1 | tee build.log
+      shell: msys2 -o igncr '{0}'
+
+    - name: Upload Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log-${{matrix.sys}}-${{matrix.env}}
+        path: guile/build.log
+        if-no-files-found: ignore
+
+    - name: Run Unit Tests
+      run: |
+        set -o pipefail
+        cd guile
+        make check V=1 2>&1 | tee check.log
+      shell: msys2 -o igncr '{0}'
+
+    - name: Upload Check Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: check-log-${{matrix.sys}}-${{matrix.env}}
+        path: |
+          guile/check.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
+        if-no-files-found: ignore
