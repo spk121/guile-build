@@ -8,24 +8,24 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 
 | Platform | Status |
 |----------|--------|
-| Ubuntu | [![Ubuntu](https://github.com/spk121/guile/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu.yml) |
-| Ubuntu ARM64 | [![Ubuntu ARM64](https://github.com/spk121/guile/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-arm.yml) |
-| Alpine | [![Alpine](https://github.com/spk121/guile/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/alpine.yml) |
-| MacOS | [![MacOS](https://github.com/spk121/guile/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/macos.yml) |
-| Cygwin | [![Cygwin](https://github.com/spk121/guile/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/cygwin.yml) |
-| MSYS | [![MSYS](https://github.com/spk121/guile/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/msys.yml) |
-| MinGW | [![MinGW](https://github.com/spk121/guile/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/mingw.yml) |
-| FreeBSD | [![FreeBSD](https://github.com/spk121/guile/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/freebsd.yml) |
-| OpenBSD | [![OpenBSD](https://github.com/spk121/guile/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/openbsd.yml) |
-| Debian GNU/Hurd | [![Debian GNU/Hurd](https://github.com/spk121/guile/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/hurd.yml) |
+| Ubuntu | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml) |
+| Ubuntu ARM64 | [![Ubuntu ARM64](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml) |
+| Alpine | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) |
+| MacOS | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) |
+| Cygwin | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) |
+| MSYS | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) |
+| MinGW | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) |
+| FreeBSD | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) |
+| OpenBSD | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) |
+| Debian GNU/Hurd | [![Debian GNU/Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) |
 
 ### Distribution checks
 
 | Workflow | Status |
 |----------|--------|
-| Ubuntu Distcheck | [![Ubuntu Distcheck](https://github.com/spk121/guile/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-distcheck.yml) |
-| Ubuntu Dist Verify | [![Ubuntu Dist Verify](https://github.com/spk121/guile/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-dist-verify.yml) |
-| Cygwin Distcheck | [![Cygwin Distcheck](https://github.com/spk121/guile/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/cygwin-distcheck.yml) |
+| Ubuntu Distcheck | [![Ubuntu Distcheck](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml) |
+| Ubuntu Dist Verify | [![Ubuntu Dist Verify](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml) |
+| Cygwin Distcheck | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) |
 
 ## About
 
