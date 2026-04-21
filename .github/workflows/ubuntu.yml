@@ -62,12 +62,14 @@ jobs:
 
     - name: Configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
         cd guile
         sed -i 's/^/;;/' test-suite/tests/version.test
-        ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" | tee -a configure.log
+        ./autogen.sh 2>&1 | tee configure.log
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+      shell: bash
 
     - name: Upload Configure Log
       if: success() || failure()
@@ -81,8 +83,10 @@ jobs:
 
     - name: Build
       run: |
+        set -o pipefail
         cd guile
         make -j"$(nproc)" V=1 2>&1 | tee build.log
+      shell: bash
 
     - name: Upload Build Log
       if: success() || failure()
@@ -94,6 +98,7 @@ jobs:
 
     - name: Run Unit Tests
       run: |
+        set -o pipefail
         cd guile
         git config --global --add safe.directory "$(pwd)"
         make check V=1 2>&1 | tee check.log

@@ -1,29 +1,22 @@
 name: Cygwin Distcheck
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 09:00 UTC
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
         required: false
+        default: ''
         type: string
 
 jobs:
@@ -37,12 +30,18 @@ jobs:
     - name: Set git to Linux line endings
       run: git config --global core.autocrlf input
 
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
+    - name: Clone source repository
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$env:REPO_URL" --depth=1
+        if ($env:REPO_REF -ne '') {
+          cd guile
+          git fetch --depth=1 origin "$env:REPO_REF"
+          git checkout "$env:REPO_REF"
+        }
+      shell: pwsh
 
     - name: Cache Cygwin packages
       uses: actions/cache@v5
@@ -64,27 +63,64 @@ jobs:
 
     - name: Configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
+        cd guile
         sed -i 's/^/;;/' test-suite/tests/version.test
-        ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+        ./autogen.sh 2>&1 | tee configure.log
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
+    - name: Upload Configure Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: configure-log
+        path: |
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
 
     - name: Build
-      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+
+    - name: Upload Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log
+        path: guile/build.log
+        if-no-files-found: ignore
 
     - name: Run Dist Check
-      run: make -j"$(nproc)" distcheck V=1
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(nproc)" distcheck V=1 2>&1 | tee distcheck.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
 
-    - name: Archive Source Package
+    - name: Upload Distcheck Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: distcheck-log
+        path: |
+          guile/distcheck.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
+          guile/guile-*/_build/sub/test-suite/tests/*.log
+          guile/guile-*/_build/sub/test-suite/standalone/*.log
+        if-no-files-found: ignore
+
+    - name: Upload Source Package
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
         name: pkg-cygwin-distcheck
-        path: |
-          guile*.tar
-          ./*.log
-          ./**/*.log
+        path: guile/guile-*.tar*
+        if-no-files-found: ignore

@@ -35,8 +35,10 @@ jobs:
         REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
         REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
       run: |
-        git clone "$env:REPO_URL" .
+        git clone "$env:REPO_URL" --depth=1
         if ($env:REPO_REF -ne '') {
+          cd guile
+          git fetch --depth=1 origin "$env:REPO_REF"
           git checkout "$env:REPO_REF"
         }
       shell: pwsh
@@ -61,11 +63,13 @@ jobs:
 
     - name: Configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
+        cd guile
         sed -i 's/^/;;/' test-suite/tests/version.test
         ./autogen.sh 2>&1 | tee configure.log
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app" 2>&1 | tee -a configure.log
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
 
     - name: Upload Configure Log
@@ -74,11 +78,15 @@ jobs:
       with:
         name: configure-log
         path: |
-          configure.log
-          config.log
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
 
     - name: Build
-      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
 
     - name: Upload Build Log
@@ -86,10 +94,13 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: build-log
-        path: build.log
+        path: guile/build.log
+        if-no-files-found: ignore
 
     - name: Run Unit Tests
       run: |
+        set -o pipefail
+        cd guile
         git config --global --add safe.directory "$(pwd)"
         make check V=1 2>&1 | tee check.log
       shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
@@ -100,6 +111,7 @@ jobs:
       with:
         name: check-log
         path: |
-          check.log
-          ./test-suite/tests/*.log
-          ./test-suite/standalone/*.log
+          guile/check.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
+        if-no-files-found: ignore

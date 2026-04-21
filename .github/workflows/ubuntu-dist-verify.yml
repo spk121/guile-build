@@ -1,29 +1,22 @@
 name: Ubuntu Dist Verify
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 11 * * *'  # Daily at 11:00 UTC
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
         required: false
+        default: ''
         type: string
 
 jobs:
@@ -34,18 +27,17 @@ jobs:
     permissions:
       contents: read
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
-
-    - name: Cache apt packages
-      uses: actions/cache@v5
-      with:
-        path: /var/cache/apt/archives
-        key: apt-${{ runner.os }}-${{ hashFiles('.github/workflows/**') }}
+    - name: Clone source repository
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$REPO_URL" --depth=1
+        if [ -n "$REPO_REF" ]; then
+          git fetch --depth=1 origin "$REPO_REF"
+          git checkout "$REPO_REF"
+        fi
+      shell: bash
 
     - name: Install packages
       run: >-
@@ -70,62 +62,155 @@ jobs:
 
     - name: Configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
         mkdir "$(pwd)/app"
+        cd guile
         sed -i 's/^/;;/' test-suite/tests/version.test
-        ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+        ./autogen.sh 2>&1 | tee configure.log
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+      shell: bash
+
+    - name: Upload Configure Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: configure-log
+        path: |
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
 
     - name: Build
-      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(nproc)" V=1 2>&1 | tee build.log
+      shell: bash
+
+    - name: Upload Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log
+        path: guile/build.log
+        if-no-files-found: ignore
 
     - name: Run Dist Check
-      run: make -j"$(nproc)" distcheck V=1
+      run: |
+        set -o pipefail
+        cd guile
+        make -j"$(nproc)" distcheck V=1 2>&1 | tee distcheck.log
+      shell: bash
+
+    - name: Upload Distcheck Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: distcheck-log
+        path: |
+          guile/distcheck.log
+          guile/test-suite/tests/*.log
+          guile/test-suite/standalone/*.log
+          guile/guile-*/_build/sub/test-suite/tests/*.log
+          guile/guile-*/_build/sub/test-suite/standalone/*.log
+        if-no-files-found: ignore
 
     - name: Unpack distribution tarball
       run: |
+        set -o pipefail
         mkdir dist-verify
         cd dist-verify
-        lzip -d -k ../guile-*.tar.lz
-        tar xf ../guile-*.tar
-        rm ../guile-*.tar
+        lzip -d -k ../guile/guile-*.tar.lz
+        tar xf ../guile/guile-*.tar
+        rm ../guile/guile-*.tar
+      shell: bash
 
     - name: Configure distribution
       # No autogen.sh needed — a proper dist tarball ships a ready-made configure
       run: |
+        set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles
         cd dist-verify/guile-*/
         mkdir app
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app" 2>&1 | tee dist-configure.log
+      shell: bash
+
+    - name: Upload Dist Configure Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: dist-configure-log
+        path: |
+          dist-verify/guile-*/dist-configure.log
+          dist-verify/guile-*/config.log
+        if-no-files-found: ignore
 
     - name: Build distribution
       run: |
+        set -o pipefail
         cd dist-verify/guile-*/
         make -j"$(nproc)" V=1 2>&1 | tee dist-build.log
+      shell: bash
+
+    - name: Upload Dist Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: dist-build-log
+        path: dist-verify/guile-*/dist-build.log
+        if-no-files-found: ignore
 
     - name: Run Unit Tests on distribution
       run: |
+        set -o pipefail
         cd dist-verify/guile-*/
-        make check V=1
+        make check V=1 2>&1 | tee dist-check.log
+      shell: bash
+
+    - name: Upload Dist Check Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: dist-check-log
+        path: |
+          dist-verify/guile-*/dist-check.log
+          dist-verify/guile-*/test-suite/tests/*.log
+          dist-verify/guile-*/test-suite/standalone/*.log
+        if-no-files-found: ignore
 
     - name: Make distribution tarball
       run: |
+        set -o pipefail
         cd dist-verify/guile-*/
-        make -j"$(nproc)" dist V=1
+        make -j"$(nproc)" dist V=1 2>&1 | tee dist-make.log
+      shell: bash
+
+    - name: Upload Dist Make Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: dist-make-log
+        path: dist-verify/guile-*/dist-make.log
+        if-no-files-found: ignore
 
     - name: Decompress gzip tarball
       # upload-artifact always zips its output, so decompress the .tar.gz
       # to avoid double-compression.
-      run: gunzip guile-*.tar.gz
+      if: success() || failure()
+      run: |
+        cd dist-verify/guile-*/
+        if ls guile-*.tar.gz >/dev/null 2>&1; then
+          gunzip guile-*.tar.gz
+        fi
+      shell: bash
 
-    - name: Archive Source Package
+    - name: Upload Source Package
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
         name: pkg-ubuntu-dist-verify
         path: |
-          guile-*.tar
-          guile-*.tar.xz
-          guile-*.tar.lz
-          ./*.log
-          ./**/*.log
+          guile/guile-*.tar*
+          dist-verify/guile-*/guile-*.tar*
+        if-no-files-found: ignore
