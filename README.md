@@ -8,29 +8,44 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 
 | Platform | Status |
 |----------|--------|
-| Ubuntu | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml) |
-| MacOS | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) |
-| Cygwin | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) |
-| MSYS | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) |
-| MinGW | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) |
-| FreeBSD | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) |
-| Debian GNU/Hurd | [![Debian GNU/Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) |
+| Ubuntu | [![Ubuntu](https://github.com/spk121/guile/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu.yml) |
+| Ubuntu ARM64 | [![Ubuntu ARM64](https://github.com/spk121/guile/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-arm.yml) |
+| Alpine | [![Alpine](https://github.com/spk121/guile/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/alpine.yml) |
+| MacOS | [![MacOS](https://github.com/spk121/guile/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/macos.yml) |
+| Cygwin | [![Cygwin](https://github.com/spk121/guile/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/cygwin.yml) |
+| MSYS | [![MSYS](https://github.com/spk121/guile/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/msys.yml) |
+| MinGW | [![MinGW](https://github.com/spk121/guile/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/mingw.yml) |
+| FreeBSD | [![FreeBSD](https://github.com/spk121/guile/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/freebsd.yml) |
+| OpenBSD | [![OpenBSD](https://github.com/spk121/guile/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/openbsd.yml) |
+| Debian GNU/Hurd | [![Debian GNU/Hurd](https://github.com/spk121/guile/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/hurd.yml) |
 
 ### Distribution checks
 
 | Workflow | Status |
 |----------|--------|
-| Ubuntu Distcheck | [![Ubuntu Distcheck](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml) |
-| Ubuntu Dist Verify | [![Ubuntu Dist Verify](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml) |
-| Cygwin Distcheck | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) |
+| Ubuntu Distcheck | [![Ubuntu Distcheck](https://github.com/spk121/guile/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-distcheck.yml) |
+| Ubuntu Dist Verify | [![Ubuntu Dist Verify](https://github.com/spk121/guile/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/ubuntu-dist-verify.yml) |
+| Cygwin Distcheck | [![Cygwin Distcheck](https://github.com/spk121/guile/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile/actions/workflows/cygwin-distcheck.yml) |
 
 ## About
 
 These workflows build and test [GNU Guile](https://www.gnu.org/software/guile/) on a variety of platforms, sourcing the code from [Codeberg](https://codeberg.org/guile/guile) by default. All workflows run daily on a schedule, and can also be triggered manually with a choice of source repository (Codeberg or GitHub) and a specific branch, tag, or commit.
 
+### Platform coverage
+
+The build matrix covers a deliberately wide range of environments:
+
+- **Glibc Linux** on x86_64 (Ubuntu) and ARM64 (Ubuntu ARM64) — the mainline targets
+- **Musl Linux** (Alpine) — exposes portability issues that glibc papers over, especially around locale and threading
+- **MacOS** on Apple Silicon — Darwin / BSD userland with Homebrew
+- **Windows POSIX layers** (Cygwin, MSYS) — full POSIX emulation on Windows
+- **Native Windows** (MinGW matrix across MINGW64, MINGW32, UCRT64, CLANG64) — four different ABIs and toolchains
+- **BSDs** (FreeBSD, OpenBSD) — non-Linux Unix variants
+- **Hurd** — GNU's own kernel, surfacing assumptions that don't hold outside Linux
+
 ### Workflow types
 
-**Build workflows** (`ubuntu`, `macos`, `cygwin`, `msys`, `mingw`, `freebsd`, `hurd`) perform the standard `autogen.sh` → `configure` → `make` → `make check` cycle on each platform.
+**Build workflows** perform the standard `autogen.sh` → `configure` → `make` → `make check` cycle on each platform.
 
 **Distcheck workflows** (`ubuntu-distcheck`, `cygwin-distcheck`) run `make distcheck`, which builds a distribution tarball and verifies it can be unpacked, configured, built, and tested in a clean tree.
 
@@ -50,6 +65,9 @@ Daily builds are staggered through the day (UTC) to avoid all workflows starting
 - 14:00 — MinGW
 - 15:00 — FreeBSD
 - 16:00 — Debian GNU/Hurd
+- 17:00 — Ubuntu ARM64
+- 18:00 — Alpine
+- 19:00 — OpenBSD
 
 ### Manual runs
 
