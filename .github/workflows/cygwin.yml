@@ -73,7 +73,9 @@ jobs:
       uses: actions/upload-artifact@v6
       with:
         name: configure-log
-        path: configure.log
+        path: |
+          configure.log
+          config.log
 
     - name: Build
       run: make -j"$(nproc)" V=1 2>&1 | tee build.log
@@ -99,4 +101,5 @@ jobs:
         name: check-log
         path: |
           check.log
-          ./**/*.log
+          ./test-suite/tests/*.log
+          ./test-suite/standalone/*.log
