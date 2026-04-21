@@ -1,29 +1,22 @@
 name: Ubuntu
 
 on:
-  workflow_call:
-    inputs:
-      repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
-      ref:
-        description: 'Git ref to checkout'
-        default: ''
-        required: false
-        type: string
+  schedule:
+    - cron: '0 7 * * *'  # Daily at 07:00 UTC
   workflow_dispatch:
     inputs:
       repository:
-        description: 'Repository to checkout'
-        default: 'spk121/guile'
-        required: false
-        type: string
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
       ref:
-        description: 'Git ref to checkout'
-        default: ''
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
         required: false
+        default: ''
         type: string
 
 jobs:
@@ -35,11 +28,16 @@ jobs:
       contents: read
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ inputs.repository }}
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$env:REPO_URL" --depth=1
+        if [ -n "$env:REPO_REF" ]; then
+          git fetch --depth=1 origin "$env:REPO_REF"
+          git checkout "$env:REPO_REF"
+        fi
+      shell: bash
 
     - name: Cache apt packages
       uses: actions/cache@v5
@@ -74,19 +72,39 @@ jobs:
         mkdir "$(pwd)/app"
         sed -i 's/^/;;/' test-suite/tests/version.test
         ./autogen.sh
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app"
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/app" | tee -a configure.log
+
+    - name: Upload Configure Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: configure-log
+        path: |
+          configure.log
+          config.log
 
     - name: Build
       run: make -j"$(nproc)" V=1 2>&1 | tee build.log
 
-    - name: Run Unit Tests
-      run: make check V=1
-
-    - name: Archive Test Logs
+    - name: Upload Build Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: ubuntu
+        name: build-log
+        path: build.log      
+
+    - name: Run Unit Tests
+      run: |
+        git config --global --add safe.directory "$(pwd)"
+        make check V=1 2>&1 | tee check.log
+      shell: bash
+
+    - name: Upload Check Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: check-log
         path: |
-          ./*.log
-          ./**/*.log
+          check.log
+          ./test-suite/tests/*.log
+          ./test-suite/standalone/*.log
