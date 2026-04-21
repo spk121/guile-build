@@ -80,7 +80,9 @@ jobs:
         if-no-files-found: ignore
 
     - name: Build
-      run: make -j"$(nproc)" V=1 2>&1 | tee build.log
+      run: |
+        cd guile
+        make -j"$(nproc)" V=1 2>&1 | tee build.log
 
     - name: Upload Build Log
       if: success() || failure()
