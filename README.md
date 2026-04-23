@@ -44,7 +44,7 @@ The build matrix covers a deliberately wide range of environments:
 
 Daily builds are staggered through the day (UTC) to avoid all workflows starting at once:
 
-- 07:00 — Ubuntu x86_64: make, check, distcheck, and dist-verify
+- 07:00 to 08:00 — Ubuntu x86_64: make, check, distcheck, and dist-verify
 - 08:00 to 09:00 — Cygwin: make, check, and distcheck
 - 12:00 — MacOS
 - 13:00 — MSYS

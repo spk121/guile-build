@@ -2,7 +2,7 @@ name: Ubuntu Distcheck
 
 on:
   schedule:
-    - cron: '30 7 * * *'  # Daily at 10:00 UTC
+    - cron: '30 7 * * *'  # Daily at 07:30 UTC
   workflow_dispatch:
     inputs:
       repository:
