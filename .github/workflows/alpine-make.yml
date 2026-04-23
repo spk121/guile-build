@@ -1,8 +1,8 @@
-name: Alpine
+name: Alpine Make
 
 on:
   schedule:
-    - cron: '15 18 * * *'  # Daily at 18:15 UTC
+    - cron: '0 18 * * *'  # Daily at 18:00 UTC
   workflow_dispatch:
     inputs:
       repository:
@@ -21,7 +21,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build and Install
     runs-on: ubuntu-latest
     container: alpine:latest
     timeout-minutes: 60
@@ -68,15 +68,22 @@ jobs:
         fi
       shell: bash
 
+    - name: Prepare install prefix
+      run: |
+        mkdir -p /app
+      shell: bash
+
     - name: Configure
       run: |
         set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
-        mkdir "$(pwd)/app"
         cd guile
-        sed -i 's/^/;;/' test-suite/tests/version.test
         ./autogen.sh 2>&1 | tee configure.log
-        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+        ./configure \
+          CFLAGS="-g -O2 -Wall" \
+          LDFLAGS="-Wl,-rpath,/app/lib" \
+          --prefix=/app \
+          2>&1 | tee -a configure.log
       shell: bash
 
     - name: Upload Configure Log
@@ -104,21 +111,32 @@ jobs:
         path: guile/build.log
         if-no-files-found: ignore
 
-    - name: Run Unit Tests
+    - name: Install
       run: |
         set -o pipefail
         cd guile
-        git config --global --add safe.directory "$(pwd)"
-        make check V=1 2>&1 | tee check.log
+        make install V=1 2>&1 | tee install.log
       shell: bash
 
-    - name: Upload Check Log
+    - name: Upload Install Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: check-log
-        path: |
-          guile/check.log
-          guile/test-suite/tests/*.log
-          guile/test-suite/standalone/*.log
+        name: install-log
+        path: guile/install.log
         if-no-files-found: ignore
+
+    - name: Verify Installation
+      env:
+        PATH: /app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        LD_LIBRARY_PATH: /app/lib
+      run: |
+        ls -la /app/bin/
+        ls -la /app/lib/
+        echo "--- guile --version ---"
+        guile --version
+        echo "--- guile-config info ---"
+        guile-config info || true
+        echo "--- evaluate (display (+ 1 2)) ---"
+        guile -c '(display (+ 1 2)) (newline)'
+      shell: bash

@@ -8,7 +8,7 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 |----------|------|-------|-----------|-------------|
 | Ubuntu   | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-make.yml) | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml) | [![Ubuntu Distcheck](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml) | [![Ubuntu Dist Verify](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml) |
 | Ubuntu ARM64    | | [![Ubuntu ARM64](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml) | | |
-| Alpine          | | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) | | |
+| Alpine          | [![Alpine Make](https://github.com/spk121/guile-build/actions/workflows/alpine-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine-make.yml) | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) | | |
 | MacOS           | | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) | | |
 | Cygwin          | | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) | |
 | MSYS            | | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) | | |
@@ -53,7 +53,7 @@ Daily builds are staggered through the day (UTC) to avoid all workflows starting
 - 15:00 — FreeBSD
 - 16:00 — Debian GNU/Hurd
 - 17:00 — Ubuntu ARM64
-- 18:00 — Alpine
+- 18:00 to 19:00 — Alpine: make and check
 - 19:00 — OpenBSD
 
 ### Manual runs
