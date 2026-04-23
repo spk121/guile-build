@@ -2,7 +2,7 @@ name: Cygwin Distcheck
 
 on:
   schedule:
-    - cron: '0 9 * * *'  # Daily at 09:00 UTC
+    - cron: '30 8 * * *'  # Daily at 08:30 UTC
   workflow_dispatch:
     inputs:
       repository:

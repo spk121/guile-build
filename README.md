@@ -10,7 +10,7 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 | Ubuntu ARM64    | | [![Ubuntu ARM64](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml) | | |
 | Alpine          | [![Alpine Make](https://github.com/spk121/guile-build/actions/workflows/alpine-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine-make.yml) | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) | | |
 | MacOS           | | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) | | |
-| Cygwin          | | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) | |
+| Cygwin          | [![Cygwin Make](https://github.com/spk121/guile-build/actions/workflows/cygwin-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-make.yml) | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) | |
 | MSYS            | | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) | | |
 | MinGW           | | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) | | |
 | FreeBSD         | | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) | | |
@@ -45,8 +45,7 @@ The build matrix covers a deliberately wide range of environments:
 Daily builds are staggered through the day (UTC) to avoid all workflows starting at once:
 
 - 07:00 — Ubuntu x86_64: make, check, distcheck, and dist-verify
-- 08:00 — Cygwin
-- 09:00 — Cygwin Distcheck
+- 08:00 to 09:00 — Cygwin: make, check, and distcheck
 - 12:00 — MacOS
 - 13:00 — MSYS
 - 14:00 — MinGW
