@@ -9,13 +9,13 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 | Ubuntu   | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-make.yml) | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml) | [![Ubuntu Distcheck](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml) | [![Ubuntu Dist Verify](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml) |
 | Ubuntu ARM64    | | [![Ubuntu ARM64](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml) | | |
 | Alpine          | [![Alpine Make](https://github.com/spk121/guile-build/actions/workflows/alpine-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine-make.yml) | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) | | |
-| MacOS           | | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) | | |
+| MacOS           | [![MacOS Make](https://github.com/spk121/guile-build/actions/workflows/macos-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos-make.yml) | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) | | |
 | Cygwin          | [![Cygwin Make](https://github.com/spk121/guile-build/actions/workflows/cygwin-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-make.yml) | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) | |
-| MSYS            | | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) | | |
-| MinGW           | | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) | | |
-| FreeBSD         | | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) | | |
-| OpenBSD         | | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) | | |
-| Debian GNU/Hurd | | [![Debian GNU/Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) | | |
+| MSYS            | [![MSYS Make](https://github.com/spk121/guile-build/actions/workflows/msys-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys-make.yml) | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) | | |
+| MinGW           | [![MinGW Make](https://github.com/spk121/guile-build/actions/workflows/mingw-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw-make.yml) | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) | | |
+| FreeBSD         | [![FreeBSD Make](https://github.com/spk121/guile-build/actions/workflows/freebsd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd-make.yml) | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) | | |
+| OpenBSD         | [![OpenBSD Make](https://github.com/spk121/guile-build/actions/workflows/openbsd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd-make.yml) | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) | | |
+| Debian GNU/Hurd | [![Debian GNU/Hurd Make](https://github.com/spk121/guile-build/actions/workflows/hurd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd-make.yml) | [![Debian GNU/Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) | | |
 
 The columns correspond to build stages:
 
@@ -46,14 +46,20 @@ Daily builds are staggered through the day (UTC) to avoid all workflows starting
 
 - 07:00 to 08:00 — Ubuntu x86_64: make, check, distcheck, and dist-verify
 - 08:00 to 09:00 — Cygwin: make, check, and distcheck
-- 12:00 — MacOS
-- 13:00 — MSYS
-- 14:00 — MinGW
-- 15:00 — FreeBSD
-- 16:00 — Debian GNU/Hurd
+- 11:30 — MacOS: make
+- 12:00 — MacOS: check
+- 12:30 — MSYS: make
+- 13:00 — MSYS: check
+- 13:30 — MinGW: make
+- 14:00 — MinGW: check
+- 14:30 — FreeBSD: make
+- 15:00 — FreeBSD: check
+- 15:30 — Debian GNU/Hurd: make
+- 16:00 — Debian GNU/Hurd: check
 - 17:00 — Ubuntu ARM64
 - 18:00 to 19:00 — Alpine: make and check
-- 19:00 — OpenBSD
+- 18:30 — OpenBSD: make
+- 19:00 — OpenBSD: check
 
 ### Manual runs
 

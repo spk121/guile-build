@@ -1,8 +1,8 @@
-name: Cygwin Make
+name: MinGW Make
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Daily at 08:00 UTC
+    - cron: '30 13 * * *'  # Daily at 13:30 UTC
   workflow_dispatch:
     inputs:
       repository:
@@ -21,11 +21,23 @@ on:
 
 jobs:
   build:
-    name: Build and Install
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sys: MINGW64, env: x86_64,       thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
+          - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=yes, jit_tag: jit-yes, gmp: --enable-mini-gmp, s64: --without-64-calls }
+          - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
+          - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
+          - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=yes, jit_tag: jit-yes, gmp: --enable-mini-gmp, s64: --without-64-calls }
+          - { sys: CLANG64, env: clang-x86_64, thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
+
     runs-on: windows-latest
-    timeout-minutes: 120
+    name: Build ${{matrix.sys}} ${{matrix.env}} ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} ${{matrix.s64}}
+    timeout-minutes: 150
     permissions:
       contents: read
+
     steps:
     - name: Set git to Linux line endings
       run: git config --global core.autocrlf input
@@ -43,46 +55,43 @@ jobs:
         }
       shell: pwsh
 
-    - name: Cache Cygwin packages
-      uses: actions/cache@v5
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
       with:
-        path: C:\cygwin-packages
-        key: cygwin-${{ runner.os }}-${{ hashFiles('.github/workflows/**') }}
-
-    - name: Install Cygwin
-      uses: cygwin/cygwin-install-action@v4
-      with:
-        packages: >-
-          autoconf automake make libtool flex gperf
-          gcc-core
+        msystem: ${{matrix.sys}}
+        cache: true
+        install: >-
+          autotools
+          base-devel
+          mingw-w64-${{matrix.env}}-toolchain
+          flex
+          gperf
           lzip xz
-          gettext-devel libffi-devel libgc-devel
-          libgmp-devel libreadline-devel libunistring-devel
-          libiconv-devel
-          texinfo texinfo-tex texlive
-
-    - name: Prepare install prefix
-      run: |
-        mkdir -p "$(pwd)/app"
-      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+          pkgconf
+          mingw-w64-${{matrix.env}}-gettext
+          mingw-w64-${{matrix.env}}-gmp
+          mingw-w64-${{matrix.env}}-libffi
+          mingw-w64-${{matrix.env}}-gc
+          mingw-w64-${{matrix.env}}-libiconv
+          mingw-w64-${{matrix.env}}-readline
+          mingw-w64-${{matrix.env}}-libunistring
+          texinfo
 
     - name: Configure
       run: |
         set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        mkdir "$(pwd)/app"
         cd guile
         ./autogen.sh 2>&1 | tee configure.log
-        ./configure \
-          CFLAGS="-g -O2 -Wall" \
-          --prefix="$(pwd)/../app" \
-          2>&1 | tee -a configure.log
-      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+        ./configure CFLAGS="-g -O2 -Wall" ${{matrix.thread}} ${{matrix.jit}} ${{matrix.gmp}} ${{matrix.s64}} --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+      shell: msys2 -o igncr '{0}'
 
     - name: Upload Configure Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: configure-log
+        name: configure-log-${{matrix.sys}}-${{matrix.env}}-${{matrix.jit_tag}}
         path: |
           guile/configure.log
           guile/config.log
@@ -93,13 +102,13 @@ jobs:
         set -o pipefail
         cd guile
         make -j"$(nproc)" V=1 2>&1 | tee build.log
-      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+      shell: msys2 -o igncr '{0}'
 
     - name: Upload Build Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: build-log
+        name: build-log-${{matrix.sys}}-${{matrix.env}}-${{matrix.jit_tag}}
         path: guile/build.log
         if-no-files-found: ignore
 
@@ -108,13 +117,13 @@ jobs:
         set -o pipefail
         cd guile
         make install V=1 2>&1 | tee install.log
-      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+      shell: msys2 -o igncr '{0}'
 
     - name: Upload Install Log
       if: success() || failure()
       uses: actions/upload-artifact@v6
       with:
-        name: install-log
+        name: install-log-${{matrix.sys}}-${{matrix.env}}-${{matrix.jit_tag}}
         path: guile/install.log
         if-no-files-found: ignore
 
@@ -122,11 +131,10 @@ jobs:
       run: |
         export PATH="$(pwd)/app/bin:$PATH"
         ls -la "$(pwd)/app/bin/"
-        ls -la "$(pwd)/app/lib/" || true
         echo "--- guile --version ---"
         guile --version
         echo "--- guile-config info ---"
         guile-config info || true
         echo "--- evaluate (display (+ 1 2)) ---"
         guile -c '(display (+ 1 2)) (newline)'
-      shell: C:\cygwin\bin\bash.exe -o igncr '{0}'
+      shell: msys2 -o igncr '{0}'

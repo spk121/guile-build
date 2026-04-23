@@ -1,0 +1,145 @@
+name: FreeBSD Make
+
+on:
+  schedule:
+    - cron: '30 14 * * *'  # Daily at 14:30 UTC
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to build from'
+        required: true
+        default: 'https://codeberg.org/guile/guile.git'
+        type: choice
+        options:
+          - 'https://codeberg.org/guile/guile.git'
+          - 'https://github.com/spk121/guile.git'
+      ref:
+        description: 'Branch, tag, or commit SHA (leave blank for default branch)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build:
+    name: Build and Install
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    steps:
+    - name: Clone source repository
+      env:
+        REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
+        REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
+      run: |
+        git clone "$REPO_URL" --depth=1
+        if [ -n "$REPO_REF" ]; then
+          cd guile
+          git fetch --depth=1 origin "$REPO_REF"
+          git checkout "$REPO_REF"
+        fi
+      shell: bash
+
+    # Build and install run in a single VM step to avoid the overhead of
+    # launching multiple VM instances. Each phase writes its own log
+    # so the artifact uploads afterward can pick them up individually.
+    # The vmactions/freebsd-vm action shares the workspace with the
+    # host, so logs written in the VM are visible on the runner.
+    - name: Build and Install in FreeBSD VM
+      uses: vmactions/freebsd-vm@v1
+      with:
+        usesh: true
+        copyback: true
+        prepare: |
+          pkg install -y \
+            texlive-base \
+            texinfo \
+            autoconf \
+            automake \
+            m4 \
+            llvm \
+            libtool \
+            gettext \
+            gperf \
+            pkgconf \
+            lzip \
+            boehm-gc-threaded \
+            gettext-runtime \
+            gettext-tools \
+            gmake \
+            gmp \
+            indexinfo \
+            libffi \
+            libiconv \
+            libltdl \
+            libtextstyle \
+            libunistring
+        run: |
+          set -u
+          export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
+          mkdir -p "$(pwd)/app"
+          cd guile
+
+          # Configure phase
+          set -o pipefail
+          ./autogen.sh 2>&1 | tee configure.log
+          autogen_exit=$?
+          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/../app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded 2>&1 | tee -a configure.log
+          configure_exit=$?
+
+          # Build phase (only if configure succeeded)
+          build_exit=0
+          if [ $autogen_exit -eq 0 ] && [ $configure_exit -eq 0 ]; then
+            gmake -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
+            build_exit=$?
+          fi
+
+          # Install phase (only if build succeeded)
+          install_exit=0
+          if [ $build_exit -eq 0 ]; then
+            gmake install V=1 2>&1 | tee install.log
+            install_exit=$?
+          fi
+
+          # Verify installation
+          if [ $install_exit -eq 0 ]; then
+            export PATH="$(pwd)/../app/bin:$PATH"
+            ls -la "$(pwd)/../app/bin/"
+            echo "--- guile --version ---"
+            guile --version
+            echo "--- guile-config info ---"
+            guile-config info || true
+            echo "--- evaluate (display (+ 1 2)) ---"
+            guile -c '(display (+ 1 2)) (newline)'
+          fi
+
+          # Propagate any failure
+          if [ $autogen_exit -ne 0 ] || [ $configure_exit -ne 0 ] || [ $build_exit -ne 0 ] || [ $install_exit -ne 0 ]; then
+            exit 1
+          fi
+
+    - name: Upload Configure Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: configure-log
+        path: |
+          guile/configure.log
+          guile/config.log
+        if-no-files-found: ignore
+
+    - name: Upload Build Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: build-log
+        path: guile/build.log
+        if-no-files-found: ignore
+
+    - name: Upload Install Log
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: install-log
+        path: guile/install.log
+        if-no-files-found: ignore

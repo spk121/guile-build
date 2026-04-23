@@ -1,8 +1,8 @@
-name: Alpine Make
+name: MacOS Make
 
 on:
   schedule:
-    - cron: '0 18 * * *'  # Daily at 18:00 UTC
+    - cron: '30 11 * * *'  # Daily at 11:30 UTC
   workflow_dispatch:
     inputs:
       repository:
@@ -22,39 +22,11 @@ on:
 jobs:
   build:
     name: Build and Install
-    runs-on: ubuntu-latest
-    container: alpine:latest
+    runs-on: macos-latest
     timeout-minutes: 60
     permissions:
       contents: read
     steps:
-    - name: Install packages
-      run: >-
-        apk add --no-cache
-        bash
-        git
-        build-base
-        autoconf
-        automake
-        libtool
-        gettext-dev
-        gperf
-        pkgconf
-        lzip
-        xz
-        flex
-        bison
-        m4
-        gc-dev
-        gmp-dev
-        libffi-dev
-        libunistring-dev
-        readline-dev
-        ncurses-dev
-        texinfo
-        coreutils
-        sed
-
     - name: Clone source repository
       env:
         REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
@@ -62,28 +34,29 @@ jobs:
       run: |
         git clone "$REPO_URL" --depth=1
         if [ -n "$REPO_REF" ]; then
-          cd guile
           git fetch --depth=1 origin "$REPO_REF"
           git checkout "$REPO_REF"
         fi
       shell: bash
 
-    - name: Prepare install prefix
+    - name: Install packages
       run: |
-        mkdir -p /app
-      shell: bash
+        brew install bdw-gc gmp libunistring readline
+        brew install gnu-sed pkg-config automake autoconf libtool
+        brew install texinfo libiconv
 
     - name: Configure
       run: |
         set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        HOMEBREW_PREFIX="$(brew --prefix)"
+        export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/gmp/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/readline/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/bdw-gc/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libunistring/lib/pkgconfig:${HOMEBREW_PREFIX}/opt/libiconv/lib/pkgconfig:${PKG_CONFIG_PATH}"
+        export LDFLAGS="-L${HOMEBREW_PREFIX}/lib -L${HOMEBREW_PREFIX}/opt/libiconv/lib"
+        export CPPFLAGS="-I${HOMEBREW_PREFIX}/include -I${HOMEBREW_PREFIX}/opt/libiconv/include"
+        mkdir -p "$(pwd)/app"
         cd guile
         ./autogen.sh 2>&1 | tee configure.log
-        ./configure \
-          CFLAGS="-g -O2 -Wall" \
-          LDFLAGS="-Wl,-rpath,/app/lib" \
-          --prefix=/app \
-          2>&1 | tee -a configure.log
+        ./configure CFLAGS="-g -O2 -Wall -std=c2x" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
       shell: bash
 
     - name: Upload Configure Log
@@ -100,7 +73,7 @@ jobs:
       run: |
         set -o pipefail
         cd guile
-        make -j"$(nproc)" V=1 2>&1 | tee build.log
+        make -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
       shell: bash
 
     - name: Upload Build Log
@@ -127,12 +100,9 @@ jobs:
         if-no-files-found: ignore
 
     - name: Verify Installation
-      env:
-        PATH: /app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        LD_LIBRARY_PATH: /app/lib
       run: |
-        ls -la /app/bin/
-        ls -la /app/lib/
+        export PATH="$(pwd)/app/bin:${PATH}"
+        ls -la "$(pwd)/app/bin/"
         echo "--- guile --version ---"
         guile --version
         echo "--- guile-config info ---"

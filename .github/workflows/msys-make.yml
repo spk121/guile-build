@@ -1,8 +1,8 @@
-name: Alpine Make
+name: MSYS Make
 
 on:
   schedule:
-    - cron: '0 18 * * *'  # Daily at 18:00 UTC
+    - cron: '30 12 * * *'  # Daily at 12:30 UTC
   workflow_dispatch:
     inputs:
       repository:
@@ -22,69 +22,58 @@ on:
 jobs:
   build:
     name: Build and Install
-    runs-on: ubuntu-latest
-    container: alpine:latest
-    timeout-minutes: 60
+    runs-on: windows-latest
+    timeout-minutes: 90
     permissions:
       contents: read
     steps:
-    - name: Install packages
-      run: >-
-        apk add --no-cache
-        bash
-        git
-        build-base
-        autoconf
-        automake
-        libtool
-        gettext-dev
-        gperf
-        pkgconf
-        lzip
-        xz
-        flex
-        bison
-        m4
-        gc-dev
-        gmp-dev
-        libffi-dev
-        libunistring-dev
-        readline-dev
-        ncurses-dev
-        texinfo
-        coreutils
-        sed
+    - name: Set git to Linux line endings
+      run: git config --global core.autocrlf input
 
     - name: Clone source repository
       env:
         REPO_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.repository || 'https://codeberg.org/guile/guile.git' }}
         REPO_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || '' }}
       run: |
-        git clone "$REPO_URL" --depth=1
-        if [ -n "$REPO_REF" ]; then
+        git clone "$env:REPO_URL" --depth=1
+        if ($env:REPO_REF -ne '') {
           cd guile
-          git fetch --depth=1 origin "$REPO_REF"
-          git checkout "$REPO_REF"
-        fi
-      shell: bash
+          git fetch --depth=1 origin "$env:REPO_REF"
+          git checkout "$env:REPO_REF"
+        }
+      shell: pwsh
 
-    - name: Prepare install prefix
-      run: |
-        mkdir -p /app
-      shell: bash
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MSYS
+        cache: true
+        install: >-
+          autotools
+          gcc
+          flex
+          gperf
+          lzip xz
+          pkgconf
+          gettext-devel
+          gmp-devel
+          libffi-devel
+          libgc-devel
+          libiconv-devel
+          libintl
+          libreadline-devel
+          libunistring-devel
+          texinfo
 
     - name: Configure
       run: |
         set -o pipefail
         export LANG=C.UTF-8 TERM=dumb VERBOSE=true TZ=America/Los_Angeles
+        mkdir "$(pwd)/app"
         cd guile
         ./autogen.sh 2>&1 | tee configure.log
-        ./configure \
-          CFLAGS="-g -O2 -Wall" \
-          LDFLAGS="-Wl,-rpath,/app/lib" \
-          --prefix=/app \
-          2>&1 | tee -a configure.log
-      shell: bash
+        ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+      shell: msys2 -o igncr '{0}'
 
     - name: Upload Configure Log
       if: success() || failure()
@@ -101,7 +90,7 @@ jobs:
         set -o pipefail
         cd guile
         make -j"$(nproc)" V=1 2>&1 | tee build.log
-      shell: bash
+      shell: msys2 -o igncr '{0}'
 
     - name: Upload Build Log
       if: success() || failure()
@@ -116,7 +105,7 @@ jobs:
         set -o pipefail
         cd guile
         make install V=1 2>&1 | tee install.log
-      shell: bash
+      shell: msys2 -o igncr '{0}'
 
     - name: Upload Install Log
       if: success() || failure()
@@ -127,16 +116,13 @@ jobs:
         if-no-files-found: ignore
 
     - name: Verify Installation
-      env:
-        PATH: /app/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-        LD_LIBRARY_PATH: /app/lib
       run: |
-        ls -la /app/bin/
-        ls -la /app/lib/
+        export PATH="$(pwd)/app/bin:$PATH"
+        ls -la "$(pwd)/app/bin/"
         echo "--- guile --version ---"
         guile --version
         echo "--- guile-config info ---"
         guile-config info || true
         echo "--- evaluate (display (+ 1 2)) ---"
         guile -c '(display (+ 1 2)) (newline)'
-      shell: bash
+      shell: msys2 -o igncr '{0}'
