@@ -4,28 +4,25 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 
 ## Build Status
 
-### Daily builds
+| Platform | make | check | distcheck | dist verify |
+|----------|------|-------|-----------|-------------|
+| Ubuntu   | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-make.yml) | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml) | [![Ubuntu Distcheck](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml) | [![Ubuntu Dist Verify](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml) |
+| Ubuntu ARM64    | | [![Ubuntu ARM64](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml) | | |
+| Alpine          | | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) | | |
+| MacOS           | | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) | | |
+| Cygwin          | | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) | |
+| MSYS            | | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) | | |
+| MinGW           | | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) | | |
+| FreeBSD         | | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) | | |
+| OpenBSD         | | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) | | |
+| Debian GNU/Hurd | | [![Debian GNU/Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) | | |
 
-| Platform | Status |
-|----------|--------|
-| Ubuntu | [![Ubuntu](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu.yml) |
-| Ubuntu ARM64 | [![Ubuntu ARM64](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-arm.yml) |
-| Alpine | [![Alpine](https://github.com/spk121/guile-build/actions/workflows/alpine.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/alpine.yml) |
-| MacOS | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) |
-| Cygwin | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) |
-| MSYS | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) |
-| MinGW | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) |
-| FreeBSD | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) |
-| OpenBSD | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) |
-| Debian GNU/Hurd | [![Debian GNU/Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) |
+The columns correspond to build stages:
 
-### Distribution checks
-
-| Workflow | Status |
-|----------|--------|
-| Ubuntu Distcheck | [![Ubuntu Distcheck](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-distcheck.yml) |
-| Ubuntu Dist Verify | [![Ubuntu Dist Verify](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/ubuntu-dist-verify.yml) |
-| Cygwin Distcheck | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) |
+- **make** — `autogen.sh` → `configure` → `make` only; the test suite is not run.
+- **check** — `autogen.sh` → `configure` → `make` → `make check`. The badge is green only when the test suite passes end-to-end.
+- **distcheck** — `make distcheck`, which builds a distribution tarball and verifies it can be unpacked, configured, built, and tested in a clean tree.
+- **dist verify** — runs `make distcheck`, then independently unpacks the produced tarball, configures and builds it from scratch, runs the test suite, and produces a fresh `make dist` tarball from the unpacked source. This catches issues where a tarball builds inside `distcheck`'s sandboxed environment but not in a normal user-style workflow.
 
 ## About
 
@@ -43,23 +40,13 @@ The build matrix covers a deliberately wide range of environments:
 - **BSDs** (FreeBSD, OpenBSD) — non-Linux Unix variants
 - **Hurd** — GNU's own kernel, surfacing assumptions that don't hold outside Linux
 
-### Workflow types
-
-**Build workflows** perform the standard `autogen.sh` → `configure` → `make` → `make check` cycle on each platform.
-
-**Distcheck workflows** (`ubuntu-distcheck`, `cygwin-distcheck`) run `make distcheck`, which builds a distribution tarball and verifies it can be unpacked, configured, built, and tested in a clean tree.
-
-**Dist verify workflow** (`ubuntu-dist-verify`) goes a step further: it runs `make distcheck`, then independently unpacks the produced tarball, configures and builds it from scratch, runs the test suite, and produces a fresh `make dist` tarball from the unpacked source. This catches issues where a tarball builds inside `distcheck`'s sandboxed environment but not in a normal user-style workflow.
-
 ### Schedule
 
 Daily builds are staggered through the day (UTC) to avoid all workflows starting at once:
 
-- 07:00 — Ubuntu
+- 07:00 — Ubuntu x86_64: make, check, distcheck, and dist-verify
 - 08:00 — Cygwin
 - 09:00 — Cygwin Distcheck
-- 10:00 — Ubuntu Distcheck
-- 11:00 — Ubuntu Dist Verify
 - 12:00 — MacOS
 - 13:00 — MSYS
 - 14:00 — MinGW
@@ -91,3 +78,4 @@ Distcheck and dist-verify workflows additionally produce:
 - `pkg-*-distcheck`, `pkg-*-dist-verify` — the produced distribution tarballs
 
 Note that scheduled workflows on GitHub are automatically disabled if the repository sees no activity for around 60 days. If the badges all go grey at once, that's likely why — re-enable them from the Actions tab.
+
