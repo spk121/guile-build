@@ -27,7 +27,6 @@ jobs:
         include:
           - { sys: MINGW64, env: x86_64,       thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
           - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=yes, jit_tag: jit-yes, gmp: --enable-mini-gmp, s64: --without-64-calls }
-          - { sys: MINGW32, env: i686,         thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
           - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
           - { sys: UCRT64,  env: ucrt-x86_64,  thread: --without-threads, jit: --enable-jit=yes, jit_tag: jit-yes, gmp: --enable-mini-gmp, s64: --without-64-calls }
           - { sys: CLANG64, env: clang-x86_64, thread: --without-threads, jit: --enable-jit=no,  jit_tag: jit-no,  gmp: --enable-mini-gmp, s64: --without-64-calls }
