@@ -2,7 +2,7 @@ name: FreeBSD VM
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # Daily at 15:00 UTC
+    - cron: '15 13 * * *'  # Daily at 13:15 UTC
   workflow_dispatch:
     inputs:
       repository:

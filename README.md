@@ -46,20 +46,15 @@ Daily builds are staggered through the day (UTC) to avoid all workflows starting
 
 - 07:00 to 08:00 — Ubuntu x86_64: make, check, distcheck, and dist-verify
 - 08:00 to 09:00 — Cygwin: make, check, and distcheck
-- 11:30 — MacOS: make
-- 12:00 — MacOS: check
-- 12:30 — MSYS: make
-- 13:00 — MSYS: check
-- 13:30 — MinGW: make
-- 14:00 — MinGW: check
-- 14:30 — FreeBSD: make
-- 15:00 — FreeBSD: check
-- 15:30 — Debian GNU/Hurd: make
-- 16:00 — Debian GNU/Hurd: check
-- 17:00 — Ubuntu ARM64
-- 18:00 to 19:00 — Alpine: make and check
-- 18:30 — OpenBSD: make
-- 19:00 — OpenBSD: check
+- 09:00 to 10:00 — MacOS: make and check
+- 10:00 to 11:00 — MSYS: make and check
+- 11:00 to 12:00 — MinGW 32-bit MSVCRT no-JIT: make and check
+- 12:00 to 13:00 — MinGW 64-bit: make and check
+- 13:00 to 14:00 — FreeBSD: make and check
+- 14:00 to 15:00 — Debian GNU/Hurd: make and check
+- 15:00 to 16:00 — Ubuntu ARM64: check
+- 16:00 to 17:00 — Alpine: make and check
+- 17:00 to 18:00 — OpenBSD: make and check
 
 ### Manual runs
 

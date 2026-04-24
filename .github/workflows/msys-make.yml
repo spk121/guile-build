@@ -2,7 +2,7 @@ name: MSYS Make
 
 on:
   schedule:
-    - cron: '30 12 * * *'  # Daily at 12:30 UTC
+    - cron: '0 10 * * *'  # Daily at 10:00 UTC
   workflow_dispatch:
     inputs:
       repository:

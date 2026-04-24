@@ -2,7 +2,7 @@ name: OpenBSD Make
 
 on:
   schedule:
-    - cron: '30 18 * * *'  # Daily at 18:30 UTC
+    - cron: '0 17 * * *'  # Daily at 17:00 UTC
   workflow_dispatch:
     inputs:
       repository:
