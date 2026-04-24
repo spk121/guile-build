@@ -1,4 +1,4 @@
-name: MinGW32-NoJIT Make
+name: MinGW32 Build
 
 on:
   schedule:

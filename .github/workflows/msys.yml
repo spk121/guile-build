@@ -1,4 +1,4 @@
-name: MSYS
+name: MSYS Check
 
 on:
   schedule:

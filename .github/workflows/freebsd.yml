@@ -1,4 +1,4 @@
-name: FreeBSD VM
+name: FreeBSD Check
 
 on:
   schedule:

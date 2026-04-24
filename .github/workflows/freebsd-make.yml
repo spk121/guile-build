@@ -1,4 +1,4 @@
-name: FreeBSD Make
+name: FreeBSD Build
 
 on:
   schedule:

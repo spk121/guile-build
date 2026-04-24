@@ -1,4 +1,4 @@
-name: Cygwin Make
+name: Cygwin Build
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Alpine Make
+name: Alpine Build
 
 on:
   schedule:

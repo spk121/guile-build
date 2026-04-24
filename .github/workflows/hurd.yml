@@ -1,4 +1,4 @@
-name: Debian Hurd
+name: Hurd Check
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Debian Hurd Make
+name: Hurd Build
 
 on:
   schedule:

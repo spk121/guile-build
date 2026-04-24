@@ -1,4 +1,4 @@
-name: OpenBSD VM
+name: OpenBSD Check
 
 on:
   schedule:

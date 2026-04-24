@@ -1,4 +1,4 @@
-name: MinGW32-NoJIT Check
+name: MinGW32 Check
 
 on:
   schedule:

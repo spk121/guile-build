@@ -1,4 +1,4 @@
-name: MSYS Make
+name: MSYS Build
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: OpenBSD Make
+name: OpenBSD Build
 
 on:
   schedule:

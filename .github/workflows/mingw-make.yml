@@ -1,4 +1,4 @@
-name: MinGW Make
+name: MinGW Build
 
 on:
   schedule:

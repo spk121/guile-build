@@ -1,4 +1,4 @@
-name: MinGW
+name: MinGW Check
 
 on:
   schedule:

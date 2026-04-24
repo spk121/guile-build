@@ -1,4 +1,4 @@
-name: Cygwin
+name: Cygwin Check
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Ubuntu
+name: Ubuntu Check
 
 on:
   schedule:
