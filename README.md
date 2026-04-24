@@ -17,6 +17,7 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 | FreeBSD         | [![FreeBSD Make](https://github.com/spk121/guile-build/actions/workflows/freebsd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd-make.yml) | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) | | |
 | OpenBSD         | [![OpenBSD Make](https://github.com/spk121/guile-build/actions/workflows/openbsd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd-make.yml) | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) | | |
 | Debian Hurd | [![Debian Hurd Make](https://github.com/spk121/guile-build/actions/workflows/hurd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd-make.yml) | [![Debian Hurd](https://github.com/spk121/guile-build/actions/workflows/hurd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/hurd.yml) | | |
+| Fedora      | [![Fedora Make](https://github.com/spk121/guile-build/actions/workflows/fedora-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/fedora-make.yml) | [![Fedora](https://github.com/spk121/guile-build/actions/workflows/fedora.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/fedora.yml) | | |
 
 The columns correspond to build stages:
 
@@ -56,6 +57,7 @@ Daily builds are staggered through the day (UTC) to avoid all workflows starting
 - 15:00 to 16:00 — Ubuntu ARM64: check
 - 16:00 to 17:00 — Alpine: make and check
 - 17:00 to 18:00 — OpenBSD: make and check
+- 18:00 to 19:00 — Fedora: make and check
 
 ### Manual runs
 
