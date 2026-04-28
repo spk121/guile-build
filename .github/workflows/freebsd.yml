@@ -77,6 +77,8 @@ jobs:
         run: |
           set -u
           export LANG=C.UTF-8 LD_LIBRARY_PATH=/usr/local/lib PKG_CONFIG_PATH=/usr/local/lib/pkgconfig PATH="/usr/local/bin:$PATH"
+          export M4=gm4
+          export MAKE=gmake          
           mkdir -p "$(pwd)/app"
           cd guile
           sed -i '' 's/^/;;/' test-suite/tests/version.test
@@ -85,20 +87,20 @@ jobs:
           set -o pipefail
           ./autogen.sh 2>&1 | tee configure.log
           autogen_exit=$?
-          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/../app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded 2>&1 | tee -a configure.log
+          ./configure CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" --prefix="$(pwd)/../app" --enable-mini-gmp --with-libunistring-prefix=/usr/local --with-bdw-gc=bdw-gc-threaded 2>&1 | tee -a configure.log
           configure_exit=$?
 
           # Build phase (only if configure succeeded)
           build_exit=0
           if [ $autogen_exit -eq 0 ] && [ $configure_exit -eq 0 ]; then
-            gmake -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
+            $MAKE -j"$(sysctl -n hw.ncpu)" V=1 2>&1 | tee build.log
             build_exit=$?
           fi
 
           # Check phase (only if build succeeded)
           check_exit=0
           if [ $build_exit -eq 0 ] && [ $autogen_exit -eq 0 ] && [ $configure_exit -eq 0 ]; then
-            gmake check V=1 2>&1 | tee check.log
+            $MAKE check V=1 2>&1 | tee check.log
             check_exit=$?
           fi
 
