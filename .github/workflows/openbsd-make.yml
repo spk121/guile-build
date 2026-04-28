@@ -60,6 +60,7 @@ jobs:
             gperf \
             pkgconfig \
             lzip \
+            m4 \
             xz \
             boehm-gc \
             gmp \
@@ -75,6 +76,8 @@ jobs:
           export CPPFLAGS="-I/usr/local/include"
           export LDFLAGS="-L/usr/local/lib"
           export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
+          export M4=gm4
+          export MAKE=gmake
           mkdir -p "$(pwd)/app"
           cd guile
 
@@ -82,20 +85,20 @@ jobs:
           set -o pipefail
           ./autogen.sh 2>&1 | tee configure.log
           autogen_exit=$?
-          ./configure MAKE=gmake CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+          ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
           configure_exit=$?
 
           # Build phase (only if configure succeeded)
           build_exit=0
           if [ $autogen_exit -eq 0 ] && [ $configure_exit -eq 0 ]; then
-            gmake -j"$(sysctl -n hw.ncpuonline)" V=1 2>&1 | tee build.log
+            $MAKE -j"$(sysctl -n hw.ncpuonline)" V=1 2>&1 | tee build.log
             build_exit=$?
           fi
 
           # Install phase (only if build succeeded)
           install_exit=0
           if [ $build_exit -eq 0 ]; then
-            gmake install V=1 2>&1 | tee install.log
+            $MAKE install V=1 2>&1 | tee install.log
             install_exit=$?
           fi
 
