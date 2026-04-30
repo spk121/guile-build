@@ -1,4 +1,4 @@
-name: OpenBSD Build
+name: OpenBSD Build noJIT
 
 on:
   schedule:
@@ -85,7 +85,7 @@ jobs:
           set -o pipefail
           ./autogen.sh 2>&1 | tee configure.log
           autogen_exit=$?
-          ./configure CFLAGS="-g -O2 -Wall" --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
+          ./configure CFLAGS="-g -O2 -Wall" --enable-jit=no --prefix="$(pwd)/../app" 2>&1 | tee -a configure.log
           configure_exit=$?
 
           # Build phase (only if configure succeeded)
