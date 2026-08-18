@@ -82,3 +82,5 @@ Distcheck and dist-verify workflows additionally produce:
 
 Note that scheduled workflows on GitHub are automatically disabled if the repository sees no activity for around 60 days. If the badges all go grey at once, that's likely why — re-enable them from the Actions tab.
 
+###
+bump B: 2028/08/18
