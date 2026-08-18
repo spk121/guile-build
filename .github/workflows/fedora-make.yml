@@ -141,3 +141,4 @@ jobs:
         echo "--- evaluate (display (+ 1 2)) ---"
         guile -c '(display (+ 1 2)) (newline)'
       shell: bash
+
