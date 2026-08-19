@@ -53,7 +53,6 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends \
             build-essential \
-            texlive-base \
             texinfo \
             autoconf \
             automake \
