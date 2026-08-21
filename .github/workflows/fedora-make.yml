@@ -99,6 +99,40 @@ jobs:
           guile/config.log
         if-no-files-found: ignore
 
+    - name: Configure Core Dump Capture
+      run: |
+        set -o pipefail
+        workspace_dir="${GITHUB_WORKSPACE:-$(pwd)}"
+        core_diag_dir="$workspace_dir/guile/crash-diagnostics"
+        core_dir="$core_diag_dir/cores"
+        core_pattern="$core_dir/core.%e.%p.%t"
+        setup_log="$core_diag_dir/core-capture-setup.log"
+        mkdir -p "$core_dir"
+
+        {
+          echo "timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "workspace_dir: $workspace_dir"
+          echo "requested_core_pattern: $core_pattern"
+          echo "ulimit_before: $(ulimit -c)"
+        } > "$setup_log"
+
+        ulimit -c unlimited || true
+        echo "ulimit_after: $(ulimit -c)" >> "$setup_log"
+
+        if [ -w /proc/sys/kernel/core_pattern ]; then
+          if printf '%s\n' "$core_pattern" > /proc/sys/kernel/core_pattern 2>>"$setup_log"; then
+            echo "core_pattern_override: success" >> "$setup_log"
+          else
+            echo "core_pattern_override: failed" >> "$setup_log"
+          fi
+        else
+          echo "core_pattern_override: skipped (not writable)" >> "$setup_log"
+        fi
+
+        echo "kernel.core_pattern: $(cat /proc/sys/kernel/core_pattern 2>/dev/null || echo unavailable)" >> "$setup_log"
+        echo "kernel.core_uses_pid: $(cat /proc/sys/kernel/core_uses_pid 2>/dev/null || echo unavailable)" >> "$setup_log"
+      shell: bash
+
     - name: Build
       run: |
         set -o pipefail
@@ -157,6 +191,9 @@ jobs:
         mapfile -d '' core_files < <(find "$(pwd)" -type f \( -name 'core' -o -name 'core.*' -o -name '*.core' \) -print0 2>/dev/null)
         if [ "${#core_files[@]}" -eq 0 ]; then
           echo "No core files found under workspace." > "$diag_dir/no-core-files.log"
+          if [ -f "$diag_dir/core-capture-setup.log" ]; then
+            echo "Core capture setup log is available at crash-diagnostics/core-capture-setup.log." >> "$diag_dir/no-core-files.log"
+          fi
           exit 0
         fi
 
@@ -207,6 +244,7 @@ jobs:
         guile --version
         echo "--- guile-config info ---"
         guile-config info || true
+  
         echo "--- evaluate (display (+ 1 2)) ---"
         guile -c '(display (+ 1 2)) (newline)'
       shell: bash
