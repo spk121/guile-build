@@ -55,6 +55,8 @@ jobs:
         texinfo
         coreutils
         sed
+        gdb
+        elfutils
 
     - name: Clone source repository
       env:
@@ -100,6 +102,7 @@ jobs:
     - name: Build
       run: |
         set -o pipefail
+        ulimit -c unlimited
         cd guile
         make -j"$(nproc)" V=1 2>&1 | tee build.log
       shell: bash
@@ -115,9 +118,75 @@ jobs:
     - name: Install
       run: |
         set -o pipefail
+        ulimit -c unlimited
         cd guile
         make install V=1 2>&1 | tee install.log
       shell: bash
+
+    - name: Collect Crash Diagnostics
+      if: failure()
+      run: |
+        set -o pipefail
+        diag_dir="$(pwd)/guile/crash-diagnostics"
+        mkdir -p "$diag_dir"
+
+        {
+          echo "timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "uname: $(uname -a)"
+          echo "ulimit_core: $(ulimit -c)"
+          echo "kernel.core_pattern: $(cat /proc/sys/kernel/core_pattern 2>/dev/null || echo unavailable)"
+          echo "kernel.core_uses_pid: $(cat /proc/sys/kernel/core_uses_pid 2>/dev/null || echo unavailable)"
+        } > "$diag_dir/system.txt"
+
+        dmesg > "$diag_dir/dmesg.log" 2>&1 || true
+
+        if command -v coredumpctl >/dev/null 2>&1; then
+          coredumpctl list --no-pager > "$diag_dir/coredumpctl-list.log" 2>&1 || true
+          coredumpctl info --no-pager > "$diag_dir/coredumpctl-info.log" 2>&1 || true
+        else
+          echo "coredumpctl not available" > "$diag_dir/coredumpctl-unavailable.log"
+        fi
+
+        if [ -f guile/build.log ]; then
+          grep -nE 'Segmentation fault|SIGSEGV|core dumped|Aborted' guile/build.log > "$diag_dir/build-crash-lines.log" || true
+        fi
+        if [ -f guile/install.log ]; then
+          grep -nE 'Segmentation fault|SIGSEGV|core dumped|Aborted' guile/install.log > "$diag_dir/install-crash-lines.log" || true
+        fi
+
+        mapfile -d '' core_files < <(find "$(pwd)" -type f \( -name 'core' -o -name 'core.*' -o -name '*.core' \) -print0 2>/dev/null)
+        if [ "${#core_files[@]}" -eq 0 ]; then
+          echo "No core files found under workspace." > "$diag_dir/no-core-files.log"
+          exit 0
+        fi
+
+        printf '%s\n' "${core_files[@]}" > "$diag_dir/core-files.txt"
+        for core in "${core_files[@]}"; do
+          core_base="$(basename "$core")"
+          file "$core" > "$diag_dir/${core_base}.file.log" 2>&1 || true
+          exe_path="$(file "$core" | sed -n "s/.*from '\\(.*\\)'.*/\\1/p")"
+
+          if [ -n "$exe_path" ] && [ -x "$exe_path" ]; then
+            gdb --batch --quiet "$exe_path" "$core" \
+              -ex 'set pagination off' \
+              -ex 'thread apply all bt full' \
+              > "$diag_dir/${core_base}.gdb.log" 2>&1 || true
+          else
+            gdb --batch --quiet -c "$core" \
+              -ex 'set pagination off' \
+              -ex 'thread apply all bt full' \
+              > "$diag_dir/${core_base}.gdb.log" 2>&1 || true
+          fi
+        done
+      shell: bash
+
+    - name: Upload Crash Diagnostics
+      if: success() || failure()
+      uses: actions/upload-artifact@v6
+      with:
+        name: crash-diagnostics
+        path: guile/crash-diagnostics
+        if-no-files-found: ignore
 
     - name: Upload Install Log
       if: success() || failure()
@@ -141,4 +210,3 @@ jobs:
         echo "--- evaluate (display (+ 1 2)) ---"
         guile -c '(display (+ 1 2)) (newline)'
       shell: bash
-
