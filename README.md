@@ -12,7 +12,6 @@ Continuous integration workflows for [GNU Guile](https://www.gnu.org/software/gu
 | MacOS           | [![MacOS Make](https://github.com/spk121/guile-build/actions/workflows/macos-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos-make.yml) | [![MacOS](https://github.com/spk121/guile-build/actions/workflows/macos.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/macos.yml) | | |
 | Cygwin          | [![Cygwin Make](https://github.com/spk121/guile-build/actions/workflows/cygwin-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-make.yml) | [![Cygwin](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin.yml) | [![Cygwin Distcheck](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/cygwin-distcheck.yml) | |
 | MSYS            | [![MSYS Make](https://github.com/spk121/guile-build/actions/workflows/msys-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys-make.yml) | [![MSYS](https://github.com/spk121/guile-build/actions/workflows/msys.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/msys.yml) | | |
-| MinGW32-noJIT   | [![MinGW32 Make](https://github.com/spk121/guile-build/actions/workflows/mingw32-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw32-make.yml) | [![MinGW32](https://github.com/spk121/guile-build/actions/workflows/mingw32.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw32.yml) | | |
 | MinGW           | [![MinGW Make](https://github.com/spk121/guile-build/actions/workflows/mingw-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw-make.yml) | [![MinGW](https://github.com/spk121/guile-build/actions/workflows/mingw.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/mingw.yml) | | |
 | FreeBSD         | [![FreeBSD Make](https://github.com/spk121/guile-build/actions/workflows/freebsd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd-make.yml) | [![FreeBSD](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/freebsd.yml) | | |
 | OpenBSD         | [![OpenBSD Make](https://github.com/spk121/guile-build/actions/workflows/openbsd-make.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd-make.yml) | [![OpenBSD](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml/badge.svg)](https://github.com/spk121/guile-build/actions/workflows/openbsd.yml) | | |
@@ -38,7 +37,7 @@ The build matrix covers a deliberately wide range of environments:
 - **Musl Linux** (Alpine) — exposes portability issues that glibc papers over, especially around locale and threading
 - **MacOS** on Apple Silicon — Darwin / BSD userland with Homebrew
 - **Windows POSIX layers** (Cygwin, MSYS) — full POSIX emulation on Windows
-- **Native Windows** (MinGW matrix across MINGW64, MINGW32, UCRT64, CLANG64) — four different ABIs and toolchains
+- **Native Windows** (MinGW matrix across MINGW64, UCRT64, CLANG64) — three different ABIs and toolchains
 - **BSDs** (FreeBSD, OpenBSD) — non-Linux Unix variants
 - **Hurd** — GNU's own kernel, surfacing assumptions that don't hold outside Linux
 
@@ -50,8 +49,7 @@ Daily builds are staggered through the day (UTC) to avoid all workflows starting
 - 08:00 to 09:00 — Cygwin: make, check, and distcheck
 - 09:00 to 10:00 — MacOS: make and check
 - 10:00 to 11:00 — MSYS: make and check
-- 11:00 to 12:00 — MinGW 32-bit MSVCRT no-JIT: make and check
-- 12:00 to 13:00 — MinGW 64-bit: make and check
+- 12:00 to 13:00 — MinGW: make and check
 - 13:00 to 14:00 — FreeBSD: make and check
 - 14:00 to 15:00 — Debian GNU/Hurd: make and check
 - 15:00 to 16:00 — Ubuntu ARM64: check
