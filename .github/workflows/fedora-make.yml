@@ -85,6 +85,7 @@ jobs:
         ./configure \
           CFLAGS="-g -O2 -Wall" \
           LDFLAGS="-Wl,-rpath,/app/lib" \
+          --enable-jit=no \
           --prefix=/app \
           2>&1 | tee -a configure.log
       shell: bash
